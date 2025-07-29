@@ -1,0 +1,75 @@
+{
+  "name": "n8n-nodes-oracle-cloud",
+  "version": "1.0.2",
+  "description": "Unofficial Node for integration with Oracle Cloud (OCI) services and APIs",
+  "keywords": [
+    "n8n-community-node-package",
+    "n8n",
+    "node",
+    "oracle",
+    "oci",
+    "cloud"
+  ],
+  "license": "MIT",
+  "homepage": "",
+  "author": {
+    "name": "AI Te Amo Oracle",
+    "email": "aiteamoracle@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oracle-community-creator/n8n-nodes-oracle-cloud.git"
+  },
+  "engines": {
+    "node": ">=20.15"
+  },
+  "main": "index.js",
+  "scripts": {
+    "build": "npx rimraf dist && tsc && gulp build:icons",
+    "dev": "tsc --watch",
+    "format": "prettier nodes credentials --write",
+    "lint": "eslint nodes credentials package.json",
+    "lintfix": "eslint nodes credentials package.json --fix",
+    "prepublishOnly": "npm run build && npm run lint -c .eslintrc.prepublish.js nodes credentials package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [
+      "dist/credentials/OciApi.credentials.js",
+      "dist/credentials/OracleDatabaseApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/OCI/GenerativeAI/LmChatOciGenerativeAi.node.js",
+      "dist/nodes/OCI/GenerativeAI/EmbeddingsOciGenerativeAi.node.js",
+      "dist/nodes/OCI/VectorStore/VectorStoreOracle.node.js",
+      "dist/nodes/OCI/VectorStore/VectorStoreOracleTool.node.js",
+      "dist/nodes/OCI/VectorStore/VectorStoreOracleInsert.node.js"
+    ]
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.17.20",
+    "@typescript-eslint/parser": "~8.32.0",
+    "eslint": "^8.57.0",
+    "eslint-plugin-n8n-nodes-base": "^1.16.3",
+    "gulp": "^5.0.0",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.2"
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  },
+  "dependencies": {
+    "@langchain/community": "^0.3.48",
+    "@langchain/core": "^0.3.62",
+    "@types/oracledb": "^6.6.1",
+    "oci-common": "^2.112.0",
+    "oci-generativeai": "^2.112.1",
+    "oci-generativeaiinference": "^2.112.0",
+    "opossum": "^9.0.0",
+    "oracledb": "^6.8.0",
+    "tmp-promise": "^3.0.3"
+  }
+}
