@@ -16,8 +16,8 @@ import { GenerativeAiClient, models } from 'oci-generativeai';
 
 // TODO: implement other class as in @n8n (Chat Model and the model itself?)
 // TODO: list models without repeat
-// TODO: more params? triiger to set vendor, ondemand vs dedicated
-// TODO: filter duplicate models
+// TODO: more params?
+// TODO: triger to set vendor, ondemand vs dedicated
 
 const _privateKeyParse = (privateKey: string) => {
 	return '----BEGIN PRIVATE KEY-----' +
@@ -61,7 +61,6 @@ export class LmChatOciGenerativeAi implements INodeType {
 				type: 'string',
 				default: '',
 				placeholder: 'ocid1.compartment.oc1..aaaaaaaa3x7n7wwfnghe4imvt3niwo76wgqv6ecn2iadiwoph73jjowbhbna',
-				required: true,
 			},
 			{
 				displayName: 'On Demand Model Name or ID',
@@ -74,6 +73,70 @@ export class LmChatOciGenerativeAi implements INodeType {
 				description: 'Select a On Demand Model from OCI Generative AI Services. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 				required: true,
 			},
+			{
+				displayName: 'Options',
+				name: 'options',
+				placeholder: 'Add Option',
+				description: 'Additional options to add',
+				type: 'collection',
+				default: {},
+				// eslint-disable-next-line n8n-nodes-base/node-param-collection-type-unsorted-items
+				options: [
+					{
+						displayName: 'Temperature',
+						name: 'temperature',
+						default: 0.2,
+						typeOptions: { maxValue: 1, minValue: 0, numberPrecision: 1 },
+						description:
+							'Controls the randomness of the generated text. Lower values make the output more focused and deterministic, while higher values make it more diverse and random.',
+						type: 'number',
+					},
+							{
+						displayName: 'Top P',
+						name: 'topP',
+						default: 1,
+						typeOptions: { maxValue: 1, minValue: 0, numberPrecision: 1 },
+						description:
+							'Chooses from the smallest possible set of tokens whose cumulative probability exceeds the probability top_p. Helps generate more human-like text by reducing repetitions.',
+						type: 'number',
+					},
+					{
+						displayName: 'Top K',
+						name: 'topK',
+						default: -1,
+						typeOptions: { maxValue: 500, minValue: -1, numberPrecision: 1 },
+						description:
+							'Limits the number of highest probability vocabulary tokens to consider at each step. A higher value increases diversity but may reduce coherence. Set to -1 to disable.',
+						type: 'number',
+					},
+					{
+						displayName: 'Frequency Penalty',
+						name: 'frequencyPenalty',
+						type: 'number',
+						default: 0.0,
+						typeOptions: { maxValue: 1, minValue: 0 },
+						description:
+							'Adjusts the penalty for tokens that have already appeared in the generated text. Higher values discourage repetition.',
+					},
+					{
+						displayName: 'Presence Penalty',
+						name: 'presencePenalty',
+						type: 'number',
+						default: 0.0,
+						description:
+							'Adjusts the penalty for tokens based on their presence in the generated text so far. Positive values penalize tokens that have already appeared, encouraging diversity.',
+					},
+					// {
+					// 	displayName: 'Max Tokens to Generate',
+					// 	name: 'maxTokens',
+					// 	type: 'number',
+					// 	default: -1,
+					// 	description:
+					// 		'The maximum number of tokens to generate. Set to -1 for no limit. Be cautious when setting this to a large value, as it can lead to very long outputs.',
+					// },
+				]
+			}
+
 		],
 	};
 
@@ -84,9 +147,10 @@ export class LmChatOciGenerativeAi implements INodeType {
 				let privateKey = credentials.privateKey as string;
 				privateKey = _privateKeyParse(privateKey)
 				credentials.privateKey = privateKey;
+				const tenancyId = credentials.tenancyOcid as string;
 				const client = new GenerativeAiClient({
 					authenticationDetailsProvider: new SimpleAuthenticationDetailsProvider(
-						credentials.tenancyOcid as string,
+						tenancyId,
 						credentials.userOcid as string,
 						credentials.keyFingerprint as string,
 						credentials.privateKey as string,
@@ -95,7 +159,7 @@ export class LmChatOciGenerativeAi implements INodeType {
 					),
 				})
 				const compartmentId = credentials.tenancyOcid as string;
-				const listModels = await client.listModels({ compartmentId });
+				const listModels = await client.listModels({ compartmentId: compartmentId || tenancyId });
 				const options = listModels.modelCollection.items
 					.filter((modelSummary) => modelSummary.capabilities.includes(models.ModelSummary.Capabilities.Chat))
 					.map((modelSummary) => {
@@ -120,28 +184,11 @@ export class LmChatOciGenerativeAi implements INodeType {
 			const modelName = this.getNodeParameter('model', itemIndex) as string;
 			const compartmentId = this.getNodeParameter('compartmentId', itemIndex) as string;
 
-			// TODO: options like OpenAI
-			const options = {
-				temperature: 0.2,
-				max_tokens: 1024,
-				top_p: 0.75,
-				top_k: 0,
-				frequency_penalty: 0,
-				presence_penalty: 0,
-			};
-
-			const modelDefaults = {
-				temperature: 0.2,
-				max_tokens: 1024,
-				top_p: 0.75,
-				top_k: 0,
-				frequency_penalty: 0,
-				presence_penalty: 0,
-			};
+			const options = this.getNodeParameter('options', itemIndex, {}) as object;
 
 			const model = new ChatOciGenerativeAi({
 				model: modelName,
-				compartmentId: compartmentId,
+				compartmentId: compartmentId || credentials.tenancyOcid as string,
 				auth: {
 					authProvider: new SimpleAuthenticationDetailsProvider(
 						credentials.tenancyOcid as string,
@@ -152,12 +199,7 @@ export class LmChatOciGenerativeAi implements INodeType {
 						Region.fromRegionId(credentials.region as string),
 					),
 				},
-				temperature: options.temperature || modelDefaults.temperature,
-				frequencyPenalty: options.frequency_penalty || modelDefaults.frequency_penalty,
-				presencePenalty: options.presence_penalty || modelDefaults.presence_penalty,
-				topP: options.top_p || modelDefaults.top_p,
-				topK: options.top_k || modelDefaults.top_k,
-				maxTokens: options.max_tokens || modelDefaults.max_tokens,
+				...options,
 				callbacks: [new N8nLlmTracing(this)],
 				onFailedAttempt: makeN8nLlmFailedAttemptHandler(this),
 			});

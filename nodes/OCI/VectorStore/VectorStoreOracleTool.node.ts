@@ -5,13 +5,14 @@ import {
 	type SupplyData,
 	type ISupplyDataFunctions,
 	type INodeType,
-	NodeConnectionTypes
+	NodeConnectionTypes,
+	INodePropertyOptions
 } from 'n8n-workflow';
 import oracledb from 'oracledb';
 import { DynamicTool } from 'langchain/tools';
 
 import { logWrapper } from '../logWrapper';
-import { OracleDbVectorStore } from './langchain/OracleDbVectorStore';
+import { OracleDbVectorStore, DistanceStrategy } from './langchain/OracleDbVectorStore';
 
 // function getMetadataFiltersValues(
 // 	ctx: IExecuteFunctions | ISupplyDataFunctions,
@@ -128,6 +129,19 @@ export class VectorStoreOracleTool implements INodeType {
 				default: true,
 				description: 'Whether or not to include document metadata',
 			},
+			{
+				displayName: 'Distance Strategy',
+				name: 'distanceStrategy',
+				type: 'options',
+				options: Object.values(DistanceStrategy).map((strategy) => (
+					{
+						name: strategy,
+						value: strategy
+					} as INodePropertyOptions
+				)),
+				default: '',
+				description: 'How similarity between vectors is measured',
+			}
 		],
 	};
 
@@ -152,6 +166,7 @@ export class VectorStoreOracleTool implements INodeType {
 			connectString,
 		})
 		const tableName = this.getNodeParameter('tableName', itemIndex) as string;
+		const distanceStrategy = this.getNodeParameter('distanceStrategy', itemIndex) as DistanceStrategy;
 		const embeddings = (await this.getInputConnectionData(
 			NodeConnectionTypes.AiEmbedding,
 			0,
@@ -165,7 +180,8 @@ export class VectorStoreOracleTool implements INodeType {
 				const vectorStore = new OracleDbVectorStore({
 					client: dbClient,
 					tableName,
-					embeddings: embeddings
+					embeddings: embeddings,
+					distanceStrategy
 				})
 				await vectorStore.init()
 

@@ -14,8 +14,7 @@ This software is provided **“as is,” without warranty** of any kind, express
 
 [Installation](#installation)  
 [Operations](#operations)  
-[Resources](#resources)  
-[Version history](#version-history) <!-- delete if not using this section -->
+[Resources](#resources)
 
 ## Installation
 
@@ -30,3 +29,7 @@ Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes
 ## Resources
 
 - [n8n community nodes documentation](https://docs.n8n.io/integrations/#community-nodes)
+
+## Contribute
+
+- [Github Repo](https://github.com/oracle-community-creator/n8n-nodes-oracle-cloud)

@@ -73,6 +73,13 @@ export class VectorStoreOracleInsert implements INodeType {
 				default: '',
 				required: true,
 			},
+			{
+				displayName: 'Clear Table',
+				name: 'clearTable',
+				type: 'boolean',
+				default: false,
+				description: 'Whether to clear the table before inserting new data',
+			}
 		],
 	};
 
@@ -100,6 +107,7 @@ export class VectorStoreOracleInsert implements INodeType {
 			connectString,
 		})
 		const tableName = this.getNodeParameter('tableName', 0) as string;
+		const clearTable = this.getNodeParameter('clearTable', 0) as boolean;
 
 		const vectorStore = new OracleDbVectorStore({
 			client: dbClient,
@@ -115,7 +123,8 @@ export class VectorStoreOracleInsert implements INodeType {
 		);
 
 		await vectorStore.addDocuments(
-			processedDocuments
+			processedDocuments,
+			{ clearTable }
 		);
 
 		return [serializedDocuments];

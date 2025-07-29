@@ -6,7 +6,7 @@ import oracledb from 'oracledb';
 import { createHash, randomUUID } from 'crypto';
 
 
-enum DistanceStrategy {
+export enum DistanceStrategy {
 	EUCLIDEAN_DISTANCE = "EUCLIDEAN_DISTANCE",
 	DOT_PRODUCT = "DOT_PRODUCT",
 	COSINE = "COSINE"
@@ -230,6 +230,14 @@ export class OracleDbVectorStore extends VectorStore {
 
 
 	async addDocuments(documents: DocumentInterface[], options?: { [x: string]: any; }): Promise<string[] | void> {
+		if (options?.clearTable) {
+			const connection = await _get_connection(this.client);
+				if (!connection) {
+					throw new Error('Invalid connection')
+				}
+
+				await connection.execute(`TRUNCATE TABLE "${this.tableName}"`);
+		}
 		const texts = documents.map((document) => document.pageContent);
 		const metadatas = documents.map((document) => document.metadata);
 		return this.addTexts(texts, metadatas, null, options);

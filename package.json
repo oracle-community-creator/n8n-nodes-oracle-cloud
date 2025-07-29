@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-oracle-cloud",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Unofficial Node for integration with Oracle Cloud (OCI) services and APIs",
   "keywords": [
     "n8n-community-node-package",

@@ -224,7 +224,7 @@ export interface OciGenerativeAiInput extends BaseChatModelParams {
 	temperature?: number;
 	topP?: number;
 	topK?: number;
-	maxTokens?: number;
+	// maxTokens?: number;
 	frequencyPenalty?: number;
 	presencePenalty?: number;
 
@@ -241,7 +241,7 @@ export class ChatOciGenerativeAi extends BaseChatModel {
 	temperature?: number;
 	topP?: number;
 	topK?: number;
-	maxTokens?: number;
+	// maxTokens?: number;
 	client: GenerativeAiInferenceClient;
 	frequencyPenalty?: number;
 	presencePenalty?: number;
@@ -254,9 +254,10 @@ export class ChatOciGenerativeAi extends BaseChatModel {
 		this.temperature = fields.temperature;
 		this.topP = fields.topP;
 		this.topK = fields.topK;
-		this.maxTokens = fields.maxTokens;
 		this.frequencyPenalty = fields.frequencyPenalty;
 		this.presencePenalty = fields.presencePenalty;
+		// this.maxTokens = fields.maxTokens;
+
 		this.compartmentId = fields.compartmentId;
 		this.auth = fields.auth;
 		this.client = new GenerativeAiInferenceClient({
@@ -302,7 +303,7 @@ export class ChatOciGenerativeAi extends BaseChatModel {
 			presencePenalty: this.presencePenalty,
 			topP: this.topP,
 			topK: this.topK,
-			maxTokens: this.maxTokens,
+			// maxTokens: this.maxTokens,
 			compartmentId: this.compartmentId,
 			auth: this.auth,
 			tools: ociTools
@@ -317,6 +318,35 @@ export class ChatOciGenerativeAi extends BaseChatModel {
 	): Promise<ChatResult> {
 		let chatRequest: models.CohereChatRequest | models.GenericChatRequest;
 
+
+		let temperature = this.temperature;
+		let frequencyPenalty = this.frequencyPenalty;
+		let presencePenalty = this.presencePenalty;
+		if (!this.model.startsWith('cohere')) {
+			if (temperature) {
+				temperature = 2 * temperature;
+			}
+			if (frequencyPenalty) {
+				frequencyPenalty = 2 * frequencyPenalty;
+			}
+			if (presencePenalty) {
+				presencePenalty = 2 * presencePenalty;
+			}
+		}
+
+		if (this.model === "xai.grok-4") {
+			frequencyPenalty = undefined;
+			presencePenalty = undefined;
+		}
+
+		let topK = undefined;
+		if (this.model.startsWith('meta')) {
+			topK = this.topK === 0 ? -1 : this.topK;
+		}
+		if (this.model.startsWith('cohere')) {
+			topK = this.topK === -1 ? 0 : this.topK;
+		}
+
 		if (this.model.startsWith('cohere')) {
 			// TODO: adjust temperature and topK
 			let ociMessages = messages.map(_toOciCohereMessage);
@@ -330,9 +360,8 @@ export class ChatOciGenerativeAi extends BaseChatModel {
 					toolMessages.push(message as models.CohereToolMessage)
 				}
 			})
-			console.log('ociMessages0', ociMessages)
 			const ociMessagesClean = ociMessages.filter((message) => (!Array.isArray(message) && message.role !== "TOOL"));
-			console.log('ociMessages1', ociMessagesClean)
+			console.log('ociMessages', ociMessagesClean)
 			let message = '';
 
 			let toolResults: (models.CohereToolResult[] | undefined);
@@ -375,12 +404,12 @@ export class ChatOciGenerativeAi extends BaseChatModel {
 				apiFormat: 'COHERE',
 				message,
 				chatHistory: ociMessagesClean,
-				temperature: this.temperature,
+				temperature,
 				topP: this.topP,
-				topK: this.topK,
-				maxTokens: this.maxTokens,
-				frequencyPenalty: this.frequencyPenalty,
-				presencePenalty: this.presencePenalty,
+				topK,
+				// maxTokens: this.maxTokens,
+				frequencyPenalty,
+				presencePenalty,
 				tools: this.tools,
 				toolResults
 			} as models.CohereChatRequest;
@@ -390,12 +419,12 @@ export class ChatOciGenerativeAi extends BaseChatModel {
 			chatRequest = {
 				apiFormat: 'GENERIC',
 				messages: ociMessages,
-				temperature: this.temperature,
+				temperature,
 				topP: this.topP,
-				topK: this.model.startsWith('meta') && this.topK == 0 ? -1 : this.topK,
-				maxTokens: this.maxTokens,
-				frequencyPenalty: this.frequencyPenalty,
-				presencePenalty: this.presencePenalty,
+				topK,
+				// maxTokens: this.maxTokens,
+				frequencyPenalty,
+				presencePenalty,
 				tools: this.tools
 			} as models.GenericChatRequest;
 		}

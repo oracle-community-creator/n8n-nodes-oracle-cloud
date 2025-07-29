@@ -58,7 +58,6 @@ export class EmbeddingsOciGenerativeAi implements INodeType {
 				type: 'string',
 				default: '',
 				placeholder: 'ocid1.compartment.oc1..aaaaaaaa3x7n7wwfnghe4imvt3niwo76wgqv6ecn2iadiwoph73jjowbhbna',
-				required: true,
 			},
 			{
 				displayName: 'On Demand Model Name or ID',
@@ -81,9 +80,10 @@ export class EmbeddingsOciGenerativeAi implements INodeType {
 					let privateKey = credentials.privateKey as string;
 					privateKey = _privateKeyParse(privateKey)
 					credentials.privateKey = privateKey;
+					const tenancyId = credentials.tenancyOcid as string;
 					const client = new GenerativeAiClient({
 						authenticationDetailsProvider: new SimpleAuthenticationDetailsProvider(
-							credentials.tenancyOcid as string,
+							tenancyId,
 							credentials.userOcid as string,
 							credentials.keyFingerprint as string,
 							credentials.privateKey as string,
@@ -92,7 +92,7 @@ export class EmbeddingsOciGenerativeAi implements INodeType {
 						),
 					})
 					const compartmentId = credentials.tenancyOcid as string;
-					const listModels = await client.listModels({ compartmentId });
+					const listModels = await client.listModels({ compartmentId: compartmentId || tenancyId });
 					const options = listModels.modelCollection.items
 						.filter((modelSummary) => modelSummary.capabilities.includes(models.ModelSummary.Capabilities.TextEmbeddings))
 						.map((modelSummary) => {
@@ -119,7 +119,7 @@ export class EmbeddingsOciGenerativeAi implements INodeType {
 
 		const embeddings = new OciEmbeddings({
 			model: modelName,
-				compartmentId: compartmentId,
+				compartmentId: compartmentId || credentials.tenancyOcid as string,
 				auth: {
 					authProvider: new SimpleAuthenticationDetailsProvider(
 						credentials.tenancyOcid as string,

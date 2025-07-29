@@ -5,12 +5,13 @@ import {
 	type ISupplyDataFunctions,
 	type INodeType,
 	NodeConnectionTypes,
-	IExecuteFunctions
+	IExecuteFunctions,
+	INodePropertyOptions
 } from 'n8n-workflow';
 import oracledb from 'oracledb';
 
 import { logWrapper } from '../logWrapper';
-import { OracleDbVectorStore } from './langchain/OracleDbVectorStore';
+import { DistanceStrategy, OracleDbVectorStore } from './langchain/OracleDbVectorStore';
 
 // TODO: implement vector load node
 // TODO: move repeated code to utils
@@ -94,6 +95,19 @@ export class VectorStoreOracle implements INodeType {
 				default: '',
 				required: true,
 			},
+			{
+				displayName: 'Distance Strategy',
+				name: 'distanceStrategy',
+				type: 'options',
+				options: Object.values(DistanceStrategy).map((strategy) => (
+					{
+						name: strategy,
+						value: strategy
+					} as INodePropertyOptions
+				)),
+				default: '',
+				description: 'How similarity between vectors is measured',
+			}
 			// {
 			// 	displayName: 'Metadata Filter',
 			// 	name: 'metadata',
@@ -149,11 +163,13 @@ export class VectorStoreOracle implements INodeType {
 			connectString,
 		})
 		const tableName = this.getNodeParameter('tableName', itemIndex) as string;
+		const distanceStrategy = this.getNodeParameter('distanceStrategy', itemIndex) as DistanceStrategy;
 
 		const vectorStore = new OracleDbVectorStore({
 			client: dbClient,
 			tableName,
 			embeddings: embeddings,
+			distanceStrategy,
 			filter
 		})
 		await vectorStore.init()
