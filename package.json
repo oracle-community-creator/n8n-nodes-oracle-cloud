@@ -47,7 +47,7 @@
       "dist/nodes/OCI/VectorStore/VectorStoreOracle.node.js",
       "dist/nodes/OCI/VectorStore/VectorStoreOracleTool.node.js",
       "dist/nodes/OCI/VectorStore/VectorStoreOracleInsert.node.js",
-      "dist/nodes/OCI/AISpeech/SpeechTranscriptionOci.node.js"
+      "dist/nodes/OCI/SpeechTranscriptionOci/SpeechTranscriptionOci.node.js"
     ]
   },
   "devDependencies": {

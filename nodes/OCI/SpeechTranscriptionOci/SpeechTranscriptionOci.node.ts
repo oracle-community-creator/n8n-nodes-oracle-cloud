@@ -90,7 +90,7 @@ export class SpeechTranscriptionOci implements INodeType {
         type: 'boolean',
         default: false,
         required: true,
-        description: 'Enable speaker diarization'
+        description: 'Whether to enable speaker diarization'
       },
       {
         displayName: 'Output Type',
@@ -152,7 +152,7 @@ export class SpeechTranscriptionOci implements INodeType {
             name: 'strictOptions',
             type: 'boolean',
             default: true,
-            description: 'If enabled, fail the node when the service does not apply the requested model/language'
+            description: 'Whether to fail the node when the service does not apply the requested model/language'
           },
           {
             displayName: 'Transcript Format',
