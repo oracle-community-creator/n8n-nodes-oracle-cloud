@@ -4,7 +4,7 @@ import type {
   INodeType,
   INodeTypeDescription,
 } from 'n8n-workflow';
-import { NodeOperationError } from 'n8n-workflow';
+import { ApplicationError, NodeOperationError } from 'n8n-workflow';
 
 import { Region, SimpleAuthenticationDetailsProvider } from 'oci-common';
 
@@ -111,6 +111,42 @@ export class SpeechTranscriptionOci implements INodeType {
         type: 'collection',
         default: {},
         options: [
+					{
+            displayName: 'Language Code',
+            name: 'languageCode',
+            type: 'string',
+            default: '',
+            description: 'BCP-47 language code (e.g. en-US) if known',
+          },
+					{
+            displayName: 'Max Wait (Minutes)',
+            name: 'maxWaitMinutes',
+            type: 'number',
+            default: 30,
+            description: 'Upper bound to wait for job completion when returning JSON'
+          },
+					{
+            displayName: 'Number of Speakers',
+            name: 'numberOfSpeakers',
+            type: 'number',
+            typeOptions: { minValue: 1 },
+            default: 0,
+            description: 'Optional max speakers for diarization (0 to let service decide)'
+          },
+					{
+            displayName: 'Output Prefix',
+            name: 'outputPrefix',
+            type: 'string',
+            default: 'transcriptions/',
+            description: 'Prefix in the bucket to store results'
+          },
+					{
+            displayName: 'Poll Interval (Seconds)',
+            name: 'pollIntervalSeconds',
+            type: 'number',
+            default: 5,
+            description: 'How often to poll job status when waiting for result'
+          },
           {
             displayName: 'Strict Options',
             name: 'strictOptions',
@@ -128,42 +164,6 @@ export class SpeechTranscriptionOci implements INodeType {
             ],
             default: 'JSON',
             description: 'Primary transcript format to request',
-          },
-          {
-            displayName: 'Language Code',
-            name: 'languageCode',
-            type: 'string',
-            default: '',
-            description: 'BCP-47 language code (e.g. en-US) if known',
-          },
-          {
-            displayName: 'Number of Speakers',
-            name: 'numberOfSpeakers',
-            type: 'number',
-            typeOptions: { minValue: 1 },
-            default: 0,
-            description: 'Optional max speakers for diarization (0 to let service decide)'
-          },
-          {
-            displayName: 'Output Prefix',
-            name: 'outputPrefix',
-            type: 'string',
-            default: 'transcriptions/',
-            description: 'Prefix in the bucket to store results'
-          },
-          {
-            displayName: 'Poll Interval (Seconds)',
-            name: 'pollIntervalSeconds',
-            type: 'number',
-            default: 5,
-            description: 'How often to poll job status when waiting for result'
-          },
-          {
-            displayName: 'Max Wait (Minutes)',
-            name: 'maxWaitMinutes',
-            type: 'number',
-            default: 30,
-            description: 'Upper bound to wait for job completion when returning JSON'
           },
         ],
       },
@@ -273,7 +273,7 @@ export class SpeechTranscriptionOci implements INodeType {
         const jobId: string = job?.id || job?.transcriptionJob?.id;
 
         if (!jobId) {
-          throw new Error('Failed to create transcription job: missing job ID in response');
+          throw new ApplicationError('Failed to create transcription job: missing job ID in response');
         }
 
         if (outputType === 'job_id') {
@@ -288,7 +288,7 @@ export class SpeechTranscriptionOci implements INodeType {
         let finalJobDetails: any | undefined;
         while (!['SUCCEEDED', 'FAILED', 'CANCELED'].includes(String(lifecycleState))) {
           if (Date.now() > deadline) {
-            throw new Error('Timed out waiting for transcription job to complete');
+            throw new ApplicationError('Timed out waiting for transcription job to complete');
           }
           await sleep(pollIntervalSeconds * 1000);
           let getResp: any;
@@ -309,7 +309,7 @@ export class SpeechTranscriptionOci implements INodeType {
         }
 
         if (String(lifecycleState) !== 'SUCCEEDED') {
-          throw new Error(`Transcription job did not succeed. State: ${lifecycleState}`);
+          throw new ApplicationError(`Transcription job did not succeed. State: ${lifecycleState}`);
         }
 
         // Results are written to Object Storage under a job-specific folder. Prefer files that include the job short ID.
@@ -349,11 +349,11 @@ export class SpeechTranscriptionOci implements INodeType {
         jsonObjectName = preferJob?.name || preferShort?.name || anyJson?.name;
 
         if (!jsonObjectName) {
-          throw new Error('Could not locate JSON result object for this job in the specified bucket/prefix');
+          throw new ApplicationError('Could not locate JSON result object for this job in the specified bucket/prefix');
         }
 
         if (!jsonObjectName) {
-          throw new Error('Could not locate JSON result object in the specified bucket/prefix');
+          throw new ApplicationError('Could not locate JSON result object in the specified bucket/prefix');
         }
 
         const getObjResp = await objectClient.getObject({
@@ -414,7 +414,7 @@ export class SpeechTranscriptionOci implements INodeType {
         try {
           parsed = JSON.parse(bodyStr);
         } catch (e) {
-          throw new Error('Downloaded object is not valid JSON');
+          throw new ApplicationError('Downloaded object is not valid JSON');
         }
 
         const parsedObj = (parsed as any) ?? {};
