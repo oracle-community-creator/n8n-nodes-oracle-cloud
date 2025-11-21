@@ -25,6 +25,7 @@ Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes
 - Generative AI Services (Chat Model)
 - Generative AI Services (Embedding)
 - Oracle Database 23ai+ (Vector Store)
+- AI Speech (Transcription)
 
 ## Resources
 

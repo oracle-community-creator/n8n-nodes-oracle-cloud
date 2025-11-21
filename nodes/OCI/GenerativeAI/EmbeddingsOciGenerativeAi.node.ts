@@ -14,13 +14,7 @@ import { OciEmbeddings } from './langchain/OciEmbedings';
 
 import { logWrapper } from '../logWrapper';
 
-const _privateKeyParse = (privateKey: string) => {
-	return '----BEGIN PRIVATE KEY-----' +
-			privateKey
-				.substr(27, privateKey.indexOf('-----END PRIVATE KEY-----') - 27)
-				.replaceAll(' ', '\r\n') +
-			'-----END PRIVATE KEY-----';
-}
+import { privateKeyParse } from '../utils'
 
 export class EmbeddingsOciGenerativeAi implements INodeType {
 	description: INodeTypeDescription = {
@@ -78,7 +72,7 @@ export class EmbeddingsOciGenerativeAi implements INodeType {
 				async getModels(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
 					const credentials = await this.getCredentials('ociApi');
 					let privateKey = credentials.privateKey as string;
-					privateKey = _privateKeyParse(privateKey)
+					privateKey = privateKeyParse(privateKey)
 					credentials.privateKey = privateKey;
 					const tenancyId = credentials.tenancyOcid as string;
 					const client = new GenerativeAiClient({
@@ -110,7 +104,7 @@ export class EmbeddingsOciGenerativeAi implements INodeType {
 	async supplyData(this: ISupplyDataFunctions, itemIndex: number): Promise<SupplyData> {
 		const credentials = await this.getCredentials('ociApi');
 		let privateKey = credentials.privateKey as string;
-		privateKey = _privateKeyParse(privateKey)
+		privateKey = privateKeyParse(privateKey)
 		credentials.privateKey = privateKey;
 
 		const modelName = this.getNodeParameter('model', itemIndex) as string;
