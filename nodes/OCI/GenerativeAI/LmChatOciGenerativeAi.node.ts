@@ -28,7 +28,7 @@ export class LmChatOciGenerativeAi implements INodeType {
 		name: 'lmChatOciGenerativeAi',
 		group: ['transform'],
 		icon: { light: 'file:oracle.svg', dark: 'file:oracle.svg' },
-		version: 1,
+		version: [1, 1.1],
 		description: 'Call OCI Generative AI Services for Oracle Cloud',
 		defaults: {
 			name: 'OCI Generative AI Chat Model',
@@ -43,7 +43,7 @@ export class LmChatOciGenerativeAi implements INodeType {
 			categories: ['AI'],
 			subcategories: {
 				AI: ['Language Models', 'Root Nodes'],
-				'Language Models': ['Chat Models (Recommended)'],
+				'Language Models': ['Text Completion Models'],
 			},
 		},
 		inputs: [],
