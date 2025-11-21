@@ -13,19 +13,14 @@ import { Region, SimpleAuthenticationDetailsProvider } from 'oci-common';
 import { makeN8nLlmFailedAttemptHandler } from '../n8nLlmFailedAttemptHandler';
 import { N8nLlmTracing } from '../N8nLlmTracing';
 import { GenerativeAiClient, models } from 'oci-generativeai';
+import { privateKeyParse } from '../utils'
 
 // TODO: implement other class as in @n8n (Chat Model and the model itself?)
 // TODO: list models without repeat
 // TODO: more params?
 // TODO: triger to set vendor, ondemand vs dedicated
 
-const _privateKeyParse = (privateKey: string) => {
-	return '----BEGIN PRIVATE KEY-----' +
-			privateKey
-				.substr(27, privateKey.indexOf('-----END PRIVATE KEY-----') - 27)
-				.replaceAll(' ', '\r\n') +
-			'-----END PRIVATE KEY-----';
-}
+
 
 export class LmChatOciGenerativeAi implements INodeType {
 	description: INodeTypeDescription = {
@@ -145,7 +140,7 @@ export class LmChatOciGenerativeAi implements INodeType {
 			async getModels(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
 				const credentials = await this.getCredentials('ociApi');
 				let privateKey = credentials.privateKey as string;
-				privateKey = _privateKeyParse(privateKey)
+				privateKey = privateKeyParse(privateKey)
 				credentials.privateKey = privateKey;
 				const tenancyId = credentials.tenancyOcid as string;
 				const client = new GenerativeAiClient({
@@ -178,7 +173,7 @@ export class LmChatOciGenerativeAi implements INodeType {
 		try {
 			const credentials = await this.getCredentials('ociApi');
 			let privateKey = credentials.privateKey as string;
-			privateKey = _privateKeyParse(privateKey)
+			privateKey = privateKeyParse(privateKey)
 			credentials.privateKey = privateKey;
 
 			const modelName = this.getNodeParameter('model', itemIndex) as string;

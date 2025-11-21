@@ -7,21 +7,14 @@ import type {
 import { ApplicationError, NodeOperationError } from 'n8n-workflow';
 
 import { Region, SimpleAuthenticationDetailsProvider } from 'oci-common';
+import { privateKeyParse } from '../utils'
 
 const AIServiceSpeechClient = require('oci-aispeech').AIServiceSpeechClient;
 const ObjectStorageClient = require('oci-objectstorage').ObjectStorageClient;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const _privateKeyParse = (privateKey: string) => {
-  return (
-    '----BEGIN PRIVATE KEY-----' +
-    privateKey
-      .substr(27, privateKey.indexOf('-----END PRIVATE KEY-----') - 27)
-      .replaceAll(' ', '\r\n') +
-    '-----END PRIVATE KEY-----'
-  );
-};
+
 
 export class SpeechTranscriptionOci implements INodeType {
   description: INodeTypeDescription = {
@@ -176,7 +169,7 @@ export class SpeechTranscriptionOci implements INodeType {
 
     const credentials = await this.getCredentials('ociApi');
     let privateKey = credentials.privateKey as string;
-    privateKey = _privateKeyParse(privateKey);
+    privateKey = privateKeyParse(privateKey);
     credentials.privateKey = privateKey;
 
     const authProvider = new SimpleAuthenticationDetailsProvider(
