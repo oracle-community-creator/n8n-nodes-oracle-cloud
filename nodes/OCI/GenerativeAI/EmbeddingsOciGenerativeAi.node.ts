@@ -28,7 +28,7 @@ export class EmbeddingsOciGenerativeAi implements INodeType {
 			},
 		],
 		group: ['transform'],
-		version: [1, 1.1, 1.2],
+		version: [1, 1.1, 1.2, 2],
 		description: 'Use OCI Generative AI Embeddings',
 		defaults: {
 			name: 'Embeddings OCI Generative AI',

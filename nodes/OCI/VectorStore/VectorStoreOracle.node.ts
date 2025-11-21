@@ -57,9 +57,7 @@ export class VectorStoreOracle implements INodeType {
 				required: true,
 			},
 		],
-		// 1.2 has changes to VectorStoreInMemory node.
-		// 1.3 drops `toolName` and uses node name as the tool name.
-		version: [1, 1.1, 1.2, 1.3],
+		version: [1, 1.1, 1.2, 1.3, 2],
 		codex: {
 				categories: ['AI'],
 				subcategories: {
