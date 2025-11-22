@@ -1,4 +1,4 @@
-/* eslint-disable n8n-nodes-base/node-filename-against-convention */
+ 
 import type { Embeddings } from '@langchain/core/embeddings';
 import {
 	type INodeTypeDescription,
@@ -143,6 +143,7 @@ export class VectorStoreOracleTool implements INodeType {
 				description: 'How similarity between vectors is measured',
 			}
 		],
+		usableAsTool: true,
 	};
 
 	async supplyData(this: ISupplyDataFunctions, itemIndex: number): Promise<SupplyData> {
@@ -190,7 +191,7 @@ export class VectorStoreOracleTool implements INodeType {
 				const embeddedPrompt = await embeddings.embedQuery(input);
 
 				// Search for similar documents
-				let documents = await vectorStore.similaritySearchVectorWithScore(
+				const documents = await vectorStore.similaritySearchVectorWithScore(
 					embeddedPrompt,
 					topK,
 					{},

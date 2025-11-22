@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-oracle-cloud",
-  "version": "1.1.3",
+  "version": "1.2",
   "description": "Unofficial Node for integration with Oracle Cloud (OCI) services and APIs",
   "keywords": [
     "n8n-community-node-package",
@@ -20,10 +20,6 @@
     "type": "git",
     "url": "https://github.com/oracle-community-creator/n8n-nodes-oracle-cloud.git"
   },
-  "engines": {
-    "node": ">=20.15"
-  },
-  "main": "index.js",
   "scripts": {
     "build": "n8n-node build",
     "build:watch": "tsc --watch",
@@ -65,7 +61,7 @@
   "dependencies": {
     "@langchain/community": "^0.3.50",
     "@langchain/core": "^0.3.68",
-    "@types/oracledb": "^6.10.0",
+    "@types/oracledb": "^6.6.1",
     "@types/lodash": "^4.17.17",
     "oci-aispeech": "^2.122.0",
     "oci-common": "^2.122.0",
@@ -73,7 +69,7 @@
     "oci-generativeaiinference": "^2.122.0",
     "oci-objectstorage": "^2.122.0",
     "opossum": "^9.0.0",
-    "oracledb": "^6.10.0",
+    "oracledb": "^6.8.0",
     "tmp-promise": "^3.0.3",
     "lodash": "^4.17.21"
   }

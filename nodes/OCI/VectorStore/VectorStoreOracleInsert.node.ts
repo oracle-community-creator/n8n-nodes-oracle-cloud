@@ -81,6 +81,7 @@ export class VectorStoreOracleInsert implements INodeType {
 				description: 'Whether to clear the table before inserting new data',
 			}
 		],
+		usableAsTool: true,
 	};
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {

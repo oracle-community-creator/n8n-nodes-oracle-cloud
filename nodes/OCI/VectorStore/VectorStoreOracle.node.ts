@@ -141,6 +141,7 @@ export class VectorStoreOracle implements INodeType {
 			// 	],
 			// }
 		],
+		usableAsTool: true,
 	};
 
 	async supplyData(this: ISupplyDataFunctions, itemIndex: number): Promise<SupplyData> {

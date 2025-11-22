@@ -28,7 +28,7 @@
 export const privateKeyParse = (privateKey: string): string => {
   if (!privateKey) return '';
 
-  let saneKey = privateKey.trim().replace(/\\n/g, '\n');
+  const saneKey = privateKey.trim().replace(/\\n/g, '\n');
 
   const match = saneKey.match(/-----BEGIN ([A-Z\s]+)-----([\s\S]*?)-----END \1-----/);
 

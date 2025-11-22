@@ -27,133 +27,133 @@ import { JsonSchema7Type } from 'zod-to-json-schema';
 
 // Convert JSON Schema type to Cohere type
 function jsonSchemaTypeToCohereType(jsonSchema: JsonSchema7Type): string {
-  // Handle enum types
-  if (jsonSchema && typeof jsonSchema === 'object' && 'enum' in jsonSchema) {
-    return 'str'; // Cohere treats enums as strings
-  }
+	// Handle enum types
+	if (jsonSchema && typeof jsonSchema === 'object' && 'enum' in jsonSchema) {
+		return 'str'; // Cohere treats enums as strings
+	}
 
-  // Handle array types
-  if (jsonSchema && typeof jsonSchema === 'object' && 'type' in jsonSchema && jsonSchema.type === 'array') {
-    return 'list';
-  }
+	// Handle array types
+	if (jsonSchema && typeof jsonSchema === 'object' && 'type' in jsonSchema && jsonSchema.type === 'array') {
+		return 'list';
+	}
 
-  // Handle object types
-  if (jsonSchema && typeof jsonSchema === 'object' && 'type' in jsonSchema && jsonSchema.type === 'object') {
-    return 'dict';
-  }
+	// Handle object types
+	if (jsonSchema && typeof jsonSchema === 'object' && 'type' in jsonSchema && jsonSchema.type === 'object') {
+		return 'dict';
+	}
 
-  // Handle primitive types
-  if (jsonSchema && typeof jsonSchema === 'object' && 'type' in jsonSchema && jsonSchema.type) {
-    switch (jsonSchema.type) {
-      case 'string':
-        return 'str';
-      case 'number':
-      case 'integer':
-        return 'float';
-      case 'boolean':
-        return 'bool';
-      default:
-        return 'str'; // Default fallback
-    }
-  }
+	// Handle primitive types
+	if (jsonSchema && typeof jsonSchema === 'object' && 'type' in jsonSchema && jsonSchema.type) {
+		switch (jsonSchema.type) {
+			case 'string':
+				return 'str';
+			case 'number':
+			case 'integer':
+				return 'float';
+			case 'boolean':
+				return 'bool';
+			default:
+				return 'str'; // Default fallback
+		}
+	}
 
-  return 'str'; // Default fallback
+	return 'str'; // Default fallback
 }
 
 function jsonSchemaToCoherePrameters(jsonSchema: JsonSchema7Type): Record<string, models.CohereParameterDefinition> {
-  const parameters: Record<string, {
-    description: string;
-    type: string;
-    isRequired?: boolean;
-  }> = {};
+	const parameters: Record<string, {
+		description: string;
+		type: string;
+		isRequired?: boolean;
+	}> = {};
 
-  // Handle object schema with properties
-  if (jsonSchema &&
-      typeof jsonSchema === 'object' &&
-			'type' in jsonSchema &&
-      jsonSchema.type === 'object' &&
-			'properties' in jsonSchema &&
-      jsonSchema.properties
-		) {
+	// Handle object schema with properties
+	if (jsonSchema &&
+		typeof jsonSchema === 'object' &&
+		'type' in jsonSchema &&
+		jsonSchema.type === 'object' &&
+		'properties' in jsonSchema &&
+		jsonSchema.properties
+	) {
 
-    Object.entries(jsonSchema.properties).forEach(([key, propertySchema]) => {
+		Object.entries(jsonSchema.properties).forEach(([key, propertySchema]) => {
 
-      const description =
-        (propertySchema && typeof propertySchema === 'object' && 'description' in propertySchema && propertySchema.description) ||
-        (propertySchema && typeof propertySchema === 'object' && 'title' in propertySchema && propertySchema.title) ||
-        `Parameter ${key}`;
+			const description =
+				(propertySchema && typeof propertySchema === 'object' && 'description' in propertySchema && propertySchema.description) ||
+				(propertySchema && typeof propertySchema === 'object' && 'title' in propertySchema && propertySchema.title) ||
+				`Parameter ${key}`;
 
-      parameters[key] = {
-        description: String(description),
-        type: jsonSchemaTypeToCohereType(propertySchema),
-        isRequired: true
-      };
-    });
-  }
+			parameters[key] = {
+				description: String(description),
+				type: jsonSchemaTypeToCohereType(propertySchema),
+				isRequired: true
+			};
+		});
+	}
 
-  return parameters;
+	return parameters;
 }
 
 // TODO: hadle multimodal messages (img)
 function _toOciGenericApiMessage(message: BaseMessage) {
 	if (isHumanMessage(message)) {
-			// TODO: handle humanMessage.content (MessageContentComplex | DataContentBlock)[]
-			const humanMessage = message as HumanMessage;
-			return {
-				role: 'USER',
-				content: [
-					{
-						type: 'TEXT',
-						text: humanMessage.content as string,
-					} as model.TextContent,
-				],
-			} as model.UserMessage;
+		// TODO: handle humanMessage.content (MessageContentComplex | DataContentBlock)[]
+		const humanMessage = message as HumanMessage;
+		return {
+			role: 'USER',
+			content: [
+				{
+					type: 'TEXT',
+					text: humanMessage.content as string,
+				} as model.TextContent,
+			],
+		} as model.UserMessage;
 	} else if (isAIMessage(message)) {
-			const aiMessage = message as AIMessage;
-			return {
-				role: 'ASSISTANT',
-				content: [
-					{
-						type: 'TEXT',
-						text: aiMessage.content as string
-					} as model.TextContent
-				],
-				toolCalls: aiMessage.tool_calls?.map((toolCall: ToolCall) => {
-					return {
-						id: toolCall.id,
-						type: "FUNCTION",
-						name: toolCall.name,
-						arguments: JSON.stringify(toolCall.args)
-					} as model.FunctionCall
-				})
+		const aiMessage = message as AIMessage;
+		return {
+			role: 'ASSISTANT',
+			content: [
+				{
+					type: 'TEXT',
+					text: aiMessage.content as string
+				} as model.TextContent
+			],
+			toolCalls: aiMessage.tool_calls?.map((toolCall: ToolCall) => {
+				return {
+					id: toolCall.id,
+					type: "FUNCTION",
+					name: toolCall.name,
+					arguments: JSON.stringify(toolCall.args)
+				} as model.FunctionCall
+			})
 		} as model.AssistantMessage;
 	} else if (isSystemMessage(message)) {
-			// TODO: handle humanMessage.content (MessageContentComplex | DataContentBlock)[]
-			const systemMessage = message as SystemMessage;
-			return {
-				role: 'SYSTEM',
-				content: [
-					{
-						type: 'TEXT',
-						text: systemMessage.content as string,
-					} as model.TextContent,
-				],
-			} as model.SystemMessage;
+		// TODO: handle humanMessage.content (MessageContentComplex | DataContentBlock)[]
+		const systemMessage = message as SystemMessage;
+		return {
+			role: 'SYSTEM',
+			content: [
+				{
+					type: 'TEXT',
+					text: systemMessage.content as string,
+				} as model.TextContent,
+			],
+		} as model.SystemMessage;
 	} else if (isToolMessage(message)) {
-			// TODO: handle humanMessage.content (MessageContentComplex | DataContentBlock)[]
-			const toolMessage = message as ToolMessage;
-			return {
-				role: 'TOOL',
-				toolCallId: toolMessage.tool_call_id,
-				content: [
-					{
-						type: 'TEXT',
-						text: toolMessage.content as string,
-					} as model.TextContent,
-				],
-			} as model.ToolMessage;
+		// TODO: handle humanMessage.content (MessageContentComplex | DataContentBlock)[]
+		const toolMessage = message as ToolMessage;
+		return {
+			role: 'TOOL',
+			toolCallId: toolMessage.tool_call_id,
+			content: [
+				{
+					type: 'TEXT',
+					text: toolMessage.content as string,
+				} as model.TextContent,
+			],
+		} as model.ToolMessage;
 	} else {
-			throw new Error(`Got unexpected message type for Generic format`);
+		throw new Error(`Got unexpected message type for Generic format`);
 	}
 }
 
@@ -166,50 +166,50 @@ function _toOciCohereMessage(message: BaseMessage) {
 			message: humanMessage.content as string
 		} as model.CohereUserMessage;
 	} else if (isAIMessage(message)) {
-			const aiMessage = message as AIMessage;
-			if (aiMessage.tool_calls && aiMessage.tool_calls?.length > 0) {
-				if (aiMessage.content) {
-					// TODO: fix, return chatbot message as last
-					console.log("DANGER DANGER DANGER DANGER ", aiMessage.content);
-				}
-				return aiMessage.tool_calls;
+		const aiMessage = message as AIMessage;
+		if (aiMessage.tool_calls && aiMessage.tool_calls?.length > 0) {
+			if (aiMessage.content) {
+				// TODO: fix, return chatbot message as last
+				console.log("DANGER DANGER DANGER DANGER ", aiMessage.content);
 			}
-			return  {
-				role: 'CHATBOT',
-				message: aiMessage.content as string,
-				toolCalls: aiMessage.tool_calls?.map((toolCall: ToolCall) => {
-					return {
-						name: toolCall.name,
-						parameters: toolCall.args
-					} as model.CohereToolCall
-				})
+			return aiMessage.tool_calls;
+		}
+		return {
+			role: 'CHATBOT',
+			message: aiMessage.content as string,
+			toolCalls: aiMessage.tool_calls?.map((toolCall: ToolCall) => {
+				return {
+					name: toolCall.name,
+					parameters: toolCall.args
+				} as model.CohereToolCall
+			})
 		} as model.CohereChatBotMessage;
 	} else if (isSystemMessage(message)) {
-			// TODO: handle COhere System Message in preamble override
-			// TODO: handle humanMessage.content (MessageContentComplex | DataContentBlock)[]
-			const systemMessage = message as SystemMessage;
-			return {
-				role: 'SYSTEM',
-				message: systemMessage.content as string,
-			} as model.CohereSystemMessage;
+		// TODO: handle COhere System Message in preamble override
+		// TODO: handle humanMessage.content (MessageContentComplex | DataContentBlock)[]
+		const systemMessage = message as SystemMessage;
+		return {
+			role: 'SYSTEM',
+			message: systemMessage.content as string,
+		} as model.CohereSystemMessage;
 	} else if (isToolMessage(message)) {
-			// TODO: handle humanMessage.content (MessageContentComplex | DataContentBlock)[]
-			const toolMessage = message as ToolMessage;
-			console.log('toolMessage content: ', toolMessage.content)
-			return {
-				role: 'TOOL',
-				toolResults: [
-					{
-						call: {
-							 name: toolMessage.tool_call_id,
-							 parameters: {}
-						} as models.CohereToolCall,
-						outputs: JSON.parse(toolMessage.content as string)
-					} as models.CohereToolResult
-				]
-			} as model.CohereToolMessage;
+		// TODO: handle humanMessage.content (MessageContentComplex | DataContentBlock)[]
+		const toolMessage = message as ToolMessage;
+		console.log('toolMessage content: ', toolMessage.content)
+		return {
+			role: 'TOOL',
+			toolResults: [
+				{
+					call: {
+						name: toolMessage.tool_call_id,
+						parameters: {}
+					} as models.CohereToolCall,
+					outputs: JSON.parse(toolMessage.content as string)
+				} as models.CohereToolResult
+			]
+		} as model.CohereToolMessage;
 	} else {
-			throw new Error(`Got unexpected message type for Generic format`);
+		throw new Error(`Got unexpected message type for Generic format`);
 	}
 }
 
@@ -287,10 +287,10 @@ export class ChatOciGenerativeAi extends BaseChatModel {
 		} else {
 			genericTools = tools.map((tool) => {
 				return {
-						name: tool.name,
-						description: tool.description,
-						parameters: toJsonSchema(tool.schema),
-						type: 'FUNCTION'
+					name: tool.name,
+					description: tool.description,
+					parameters: toJsonSchema(tool.schema),
+					type: 'FUNCTION'
 				} as model.FunctionDefinition
 			})
 		}
@@ -349,7 +349,7 @@ export class ChatOciGenerativeAi extends BaseChatModel {
 
 		if (this.model.startsWith('cohere')) {
 			// TODO: adjust temperature and topK
-			let ociMessages = messages.map(_toOciCohereMessage);
+			const ociMessages = messages.map(_toOciCohereMessage);
 			const toolMessages: models.CohereToolMessage[] = [];
 			let toolCalls: ToolCall[] = [];
 			ociMessages.forEach((message) => {

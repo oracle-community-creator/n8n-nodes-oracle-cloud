@@ -54,11 +54,11 @@ const _create_table = async (connection: oracledb.Connection | null, tableName: 
 	`)
 }
 
-const _get_distance_function = (distanceStrategy: DistanceStrategy) : string => {
+const _get_distance_function = (distanceStrategy: DistanceStrategy): string => {
 	const distanceStrategy2Function = {
-			[DistanceStrategy.EUCLIDEAN_DISTANCE]: "EUCLIDEAN",
-			[DistanceStrategy.DOT_PRODUCT]: "DOT",
-			[DistanceStrategy.COSINE]: "COSINE",
+		[DistanceStrategy.EUCLIDEAN_DISTANCE]: "EUCLIDEAN",
+		[DistanceStrategy.DOT_PRODUCT]: "DOT",
+		[DistanceStrategy.COSINE]: "COSINE",
 	}
 
 	// # Attempt to return the corresponding distance function
@@ -69,19 +69,19 @@ const _get_distance_function = (distanceStrategy: DistanceStrategy) : string => 
 	throw new Error(`Unsupported distance strategy: ${distanceStrategy}`)
 }
 
-	function _mergeArraysToObject<T, U, V, W>(
-		ids: T[],
-		texts: U[],
-		metadatas: V[],
-		embeddings: W[]
-	): Array<{ id: T; text: U; metadata: V, embedding: W }> {
-		return ids.map((key, index) => ({
-			id: key,
-			text: texts[index],
-			metadata: metadatas[index],
-			embedding: embeddings[index]
-		}));
-	}
+function _mergeArraysToObject<T, U, V, W>(
+	ids: T[],
+	texts: U[],
+	metadatas: V[],
+	embeddings: W[]
+): Array<{ id: T; text: U; metadata: V, embedding: W }> {
+	return ids.map((key, index) => ({
+		id: key,
+		text: texts[index],
+		metadata: metadatas[index],
+		embedding: embeddings[index]
+	}));
+}
 
 export interface VectorStoreOracleInput {
 	client: any;
@@ -169,22 +169,22 @@ export class OracleDbVectorStore extends VectorStore {
 	async addTexts(texts: string[], metadatas?: Record<string, any>[], ids?: (string[] | null), options?: { [x: string]: any; }): Promise<string[] | void> {
 		let processed_ids: string[] = []
 		if (ids && ids.length > 0) {
-				processed_ids = ids.map(_id =>
-						createHash('sha256').update(_id).digest('hex').substring(0, 16).toUpperCase()
-				);
+			processed_ids = ids.map(_id =>
+				createHash('sha256').update(_id).digest('hex').substring(0, 16).toUpperCase()
+			);
 		} else if (metadatas && metadatas.every(metadata => "id" in metadata)) {
-				processed_ids = metadatas.map(metadata =>
-						createHash('sha256').update(metadata.id).digest('hex').substring(0, 16).toUpperCase()
-				);
+			processed_ids = metadatas.map(metadata =>
+				createHash('sha256').update(metadata.id).digest('hex').substring(0, 16).toUpperCase()
+			);
 		} else {
-				const generated_ids = texts.map(() => randomUUID());
-				processed_ids = generated_ids.map(_id =>
-						createHash('sha256').update(_id).digest('hex').substring(0, 16).toUpperCase()
-				);
+			const generated_ids = texts.map(() => randomUUID());
+			processed_ids = generated_ids.map(_id =>
+				createHash('sha256').update(_id).digest('hex').substring(0, 16).toUpperCase()
+			);
 		}
 
 		if (!metadatas) {
-				metadatas = texts.map(() => ({}));
+			metadatas = texts.map(() => ({}));
 		}
 
 		const embeddings = await this.embeddings.embedDocuments(texts);
@@ -200,21 +200,21 @@ export class OracleDbVectorStore extends VectorStore {
 		`;
 
 		const binds = records.map((record) => ({
-				id: Buffer.from(record.id, 'hex'), // Convert hex string to Buffer
-				text: record.text,
-				metadata: JSON.stringify(record.metadata), // Ensure it's a JSON string
-				embedding: new Float32Array(record.embedding)
+			id: Buffer.from(record.id, 'hex'), // Convert hex string to Buffer
+			text: record.text,
+			metadata: JSON.stringify(record.metadata), // Ensure it's a JSON string
+			embedding: new Float32Array(record.embedding)
 		})) as oracledb.BindParameters[];
 
 		const batchOptions = {
-				autoCommit: true,
-				batchErrors: true,
-				bindDefs: {
-						id: { type: oracledb.DB_TYPE_RAW, maxSize: 16 },
-						text: { type: oracledb.CLOB },
-						metadata: { type: oracledb.DB_TYPE_JSON },
-						embedding: { type: oracledb.DB_TYPE_VECTOR }
-				}
+			autoCommit: true,
+			batchErrors: true,
+			bindDefs: {
+				id: { type: oracledb.DB_TYPE_RAW, maxSize: 16 },
+				text: { type: oracledb.CLOB },
+				metadata: { type: oracledb.DB_TYPE_JSON },
+				embedding: { type: oracledb.DB_TYPE_VECTOR }
+			}
 		};
 
 		// Execute the batch insert
@@ -232,11 +232,11 @@ export class OracleDbVectorStore extends VectorStore {
 	async addDocuments(documents: DocumentInterface[], options?: { [x: string]: any; }): Promise<string[] | void> {
 		if (options?.clearTable) {
 			const connection = await _get_connection(this.client);
-				if (!connection) {
-					throw new Error('Invalid connection')
-				}
+			if (!connection) {
+				throw new Error('Invalid connection')
+			}
 
-				await connection.execute(`TRUNCATE TABLE "${this.tableName}"`);
+			await connection.execute(`TRUNCATE TABLE "${this.tableName}"`);
 		}
 		const texts = documents.map((document) => document.pageContent);
 		const metadatas = documents.map((document) => document.metadata);
@@ -244,10 +244,10 @@ export class OracleDbVectorStore extends VectorStore {
 	}
 
 	async similaritySearch(query: string, k?: number, filter?: this["FilterType"] | undefined, _callbacks?: Callbacks | undefined): Promise<DocumentInterface[]> {
-		oracledb.fetchAsString = [ oracledb.CLOB ];
+		oracledb.fetchAsString = [oracledb.CLOB];
 		if (!query) {
-      return [];
-    }
+			return [];
+		}
 		const queryEmbedding = new Float32Array(await this.embeddings.embedQuery(query));
 		const sqlQuery = `
 			SELECT
@@ -264,7 +264,7 @@ export class OracleDbVectorStore extends VectorStore {
 		const connection = await _get_connection(this.client);
 		const result = await connection.execute(
 			sqlQuery,
-			{ embedding: { type: oracledb.DB_TYPE_VECTOR, val: queryEmbedding} }, // bind the embedding vector
+			{ embedding: { type: oracledb.DB_TYPE_VECTOR, val: queryEmbedding } }, // bind the embedding vector
 			{ outFormat: oracledb.OUT_FORMAT_OBJECT }
 		);
 
@@ -280,7 +280,7 @@ export class OracleDbVectorStore extends VectorStore {
 	}
 
 	async similaritySearchVectorWithScore(query: number[], k: number, filter?: this['FilterType'] | undefined): Promise<[DocumentInterface, number][]> {
-		oracledb.fetchAsString = [ oracledb.CLOB ];
+		oracledb.fetchAsString = [oracledb.CLOB];
 		const sqlQuery = `
 			SELECT
 				id,
@@ -297,7 +297,7 @@ export class OracleDbVectorStore extends VectorStore {
 		const vector = new Float32Array(query);
 		const result = await connection.execute(
 			sqlQuery,
-			{ embedding: { type: oracledb.DB_TYPE_VECTOR, val: vector} }, // bind the embedding vector
+			{ embedding: { type: oracledb.DB_TYPE_VECTOR, val: vector } }, // bind the embedding vector
 			{ outFormat: oracledb.OUT_FORMAT_OBJECT }
 		);
 

@@ -145,7 +145,7 @@ export class N8nLlmTracing extends BaseCallbackHandler {
 			[{ json: { ...response } }],
 		]);
 
-		let inputData = this?.executionFunctions?.getInputData();
+		const inputData = this?.executionFunctions?.getInputData();
 
 		console.log(/*this.executionFunctions, */
 			inputData?.at(0)?.json?.messages,

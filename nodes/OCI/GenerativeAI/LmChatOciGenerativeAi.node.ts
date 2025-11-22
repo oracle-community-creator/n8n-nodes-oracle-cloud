@@ -28,7 +28,7 @@ export class LmChatOciGenerativeAi implements INodeType {
 		name: 'lmChatOciGenerativeAi',
 		group: ['transform'],
 		icon: { light: 'file:oracle.svg', dark: 'file:oracle.svg' },
-		version: 1,
+		version: [1, 1.1, 2],
 		description: 'Call OCI Generative AI Services for Oracle Cloud',
 		defaults: {
 			name: 'OCI Generative AI Chat Model',
@@ -86,7 +86,7 @@ export class LmChatOciGenerativeAi implements INodeType {
 							'Controls the randomness of the generated text. Lower values make the output more focused and deterministic, while higher values make it more diverse and random.',
 						type: 'number',
 					},
-							{
+					{
 						displayName: 'Top P',
 						name: 'topP',
 						default: 1,
@@ -133,6 +133,7 @@ export class LmChatOciGenerativeAi implements INodeType {
 			}
 
 		],
+		usableAsTool: true,
 	};
 
 	methods = {
@@ -161,10 +162,10 @@ export class LmChatOciGenerativeAi implements INodeType {
 						return {
 							name: modelSummary.displayName,
 							value: modelSummary.displayName,
-						} as { name: string, value: string}
+						} as { name: string, value: string }
 					})
 					.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
-					return [...new Set(options)] as INodePropertyOptions[]
+				return [...new Set(options)] as INodePropertyOptions[]
 			},
 		},
 	};
