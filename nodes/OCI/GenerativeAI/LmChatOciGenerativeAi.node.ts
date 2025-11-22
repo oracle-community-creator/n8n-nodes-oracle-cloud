@@ -43,7 +43,7 @@ export class LmChatOciGenerativeAi implements INodeType {
 			categories: ['AI'],
 			subcategories: {
 				AI: ['Language Models', 'Root Nodes'],
-				'Language Models': ['Chat Models (Recommended)'],
+				'Language Models': ['Text Completion Models'],
 			},
 		},
 		inputs: [],
