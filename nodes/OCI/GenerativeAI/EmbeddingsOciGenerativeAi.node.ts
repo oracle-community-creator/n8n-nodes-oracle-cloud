@@ -28,7 +28,7 @@ export class EmbeddingsOciGenerativeAi implements INodeType {
 			},
 		],
 		group: ['transform'],
-		version: [1, 1.1, 1.2],
+		version: [1, 1.1, 1.2, 2],
 		description: 'Use OCI Generative AI Embeddings',
 		defaults: {
 			name: 'Embeddings OCI Generative AI',
@@ -68,38 +68,38 @@ export class EmbeddingsOciGenerativeAi implements INodeType {
 	};
 
 	methods = {
-			loadOptions: {
-				async getModels(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-					const credentials = await this.getCredentials('ociApi');
-					let privateKey = credentials.privateKey as string;
-					privateKey = privateKeyParse(privateKey)
-					credentials.privateKey = privateKey;
-					const tenancyId = credentials.tenancyOcid as string;
-					const client = new GenerativeAiClient({
-						authenticationDetailsProvider: new SimpleAuthenticationDetailsProvider(
-							tenancyId,
-							credentials.userOcid as string,
-							credentials.keyFingerprint as string,
-							credentials.privateKey as string,
-							credentials.passphrase as string,
-							Region.fromRegionId(credentials.region as string),
-						),
+		loadOptions: {
+			async getModels(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+				const credentials = await this.getCredentials('ociApi');
+				let privateKey = credentials.privateKey as string;
+				privateKey = privateKeyParse(privateKey)
+				credentials.privateKey = privateKey;
+				const tenancyId = credentials.tenancyOcid as string;
+				const client = new GenerativeAiClient({
+					authenticationDetailsProvider: new SimpleAuthenticationDetailsProvider(
+						tenancyId,
+						credentials.userOcid as string,
+						credentials.keyFingerprint as string,
+						credentials.privateKey as string,
+						credentials.passphrase as string,
+						Region.fromRegionId(credentials.region as string),
+					),
+				})
+				const compartmentId = credentials.tenancyOcid as string;
+				const listModels = await client.listModels({ compartmentId: compartmentId || tenancyId });
+				const options = listModels.modelCollection.items
+					.filter((modelSummary) => modelSummary.capabilities.includes(models.ModelSummary.Capabilities.TextEmbeddings))
+					.map((modelSummary) => {
+						return {
+							name: modelSummary.displayName,
+							value: modelSummary.displayName,
+						} as INodePropertyOptions
 					})
-					const compartmentId = credentials.tenancyOcid as string;
-					const listModels = await client.listModels({ compartmentId: compartmentId || tenancyId });
-					const options = listModels.modelCollection.items
-						.filter((modelSummary) => modelSummary.capabilities.includes(models.ModelSummary.Capabilities.TextEmbeddings))
-						.map((modelSummary) => {
-							return {
-								name: modelSummary.displayName,
-								value: modelSummary.displayName,
-							} as INodePropertyOptions
-						})
-						.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
-						return [...new Set(options)]
-				},
+					.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+				return [...new Set(options)]
 			},
-		};
+		},
+	};
 
 	async supplyData(this: ISupplyDataFunctions, itemIndex: number): Promise<SupplyData> {
 		const credentials = await this.getCredentials('ociApi');
@@ -113,17 +113,17 @@ export class EmbeddingsOciGenerativeAi implements INodeType {
 
 		const embeddings = new OciEmbeddings({
 			model: modelName,
-				compartmentId: compartmentId || credentials.tenancyOcid as string,
-				auth: {
-					authProvider: new SimpleAuthenticationDetailsProvider(
-						credentials.tenancyOcid as string,
-						credentials.userOcid as string,
-						credentials.keyFingerprint as string,
-						credentials.privateKey as string,
-						credentials.passphrase as string,
-						Region.fromRegionId(credentials.region as string),
-					),
-				},
+			compartmentId: compartmentId || credentials.tenancyOcid as string,
+			auth: {
+				authProvider: new SimpleAuthenticationDetailsProvider(
+					credentials.tenancyOcid as string,
+					credentials.userOcid as string,
+					credentials.keyFingerprint as string,
+					credentials.privateKey as string,
+					credentials.passphrase as string,
+					Region.fromRegionId(credentials.region as string),
+				),
+			},
 		});
 
 		return {

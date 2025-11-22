@@ -33,14 +33,14 @@ export class VectorStoreOracleInsert implements INodeType {
 		],
 		// 1.2 has changes to VectorStoreInMemory node.
 		// 1.3 drops `toolName` and uses node name as the tool name.
-		version: [1, 1.1, 1.2, 1.3],
+		version: [1, 1.1, 1.2, 1.3, 2],
 		codex: {
-				categories: ['AI'],
-				subcategories: {
-					AI: ['Vector Stores', 'Tools', 'Root Nodes'],
-					'Vector Stores': ['Other Vector Stores'],
-					Tools: ['Other Tools'],
-				},
+			categories: ['AI'],
+			subcategories: {
+				AI: ['Vector Stores', 'Tools', 'Root Nodes'],
+				'Vector Stores': ['Other Vector Stores'],
+				Tools: ['Other Tools'],
+			},
 		},
 		inputs: [
 			NodeConnectionTypes.Main,
@@ -87,8 +87,8 @@ export class VectorStoreOracleInsert implements INodeType {
 		const items = this.getInputData(0);
 
 		const documentInput = (await this.getInputConnectionData(NodeConnectionTypes.AiDocument, 0)) as
-		| N8nJsonLoader
-		| N8nBinaryLoader;
+			| N8nJsonLoader
+			| N8nBinaryLoader;
 
 		const embeddings = (await this.getInputConnectionData(
 			NodeConnectionTypes.AiEmbedding,
