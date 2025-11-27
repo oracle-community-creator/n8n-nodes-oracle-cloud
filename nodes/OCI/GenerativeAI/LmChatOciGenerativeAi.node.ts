@@ -133,7 +133,6 @@ export class LmChatOciGenerativeAi implements INodeType {
 			}
 
 		],
-		usableAsTool: true,
 	};
 
 	methods = {

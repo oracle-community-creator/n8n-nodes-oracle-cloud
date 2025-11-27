@@ -18,7 +18,7 @@ import {
 } from 'n8n-workflow';
 import { Embeddings } from '@langchain/core/embeddings';
 
-const logAiEvent = (
+export const logAiEvent = (
 	executeFunctions: IExecuteFunctions | ISupplyDataFunctions,
 	event: AiEvent,
 	data?: IDataObject,

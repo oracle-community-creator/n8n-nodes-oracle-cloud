@@ -33,7 +33,6 @@ export class OciEmbeddings extends Embeddings {
 	async embedDocuments(documents: string[]): Promise<number[][]> {
 		const BATCH_SIZE = 90;
 		documents = documents.filter(Boolean);
-		console.log(documents.length);
 		if (documents.length <= BATCH_SIZE) {
 
 			const embedRequest = {

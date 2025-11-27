@@ -65,7 +65,6 @@ export class EmbeddingsOciGenerativeAi implements INodeType {
 				required: true,
 			},
 		],
-		usableAsTool: true,
 	};
 
 	methods = {

@@ -195,7 +195,6 @@ function _toOciCohereMessage(message: BaseMessage) {
 	} else if (isToolMessage(message)) {
 		// TODO: handle humanMessage.content (MessageContentComplex | DataContentBlock)[]
 		const toolMessage = message as ToolMessage;
-		console.log('toolMessage content: ', toolMessage.content)
 		return {
 			role: 'TOOL',
 			toolResults: [
@@ -361,7 +360,6 @@ export class ChatOciGenerativeAi extends BaseChatModel {
 				}
 			})
 			const ociMessagesClean = ociMessages.filter((message) => (!Array.isArray(message) && message.role !== "TOOL"));
-			console.log('ociMessages', ociMessagesClean)
 			let message = '';
 
 			let toolResults: (models.CohereToolResult[] | undefined);
@@ -398,7 +396,6 @@ export class ChatOciGenerativeAi extends BaseChatModel {
 			if (toolMessageLast) {
 				ociMessagesClean.push(toolMessageLast)
 			}
-			console.log('ociMessages', ociMessagesClean);
 
 			chatRequest = {
 				apiFormat: 'COHERE',
