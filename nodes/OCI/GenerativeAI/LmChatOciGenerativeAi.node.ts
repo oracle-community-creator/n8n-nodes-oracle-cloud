@@ -154,7 +154,7 @@ export class LmChatOciGenerativeAi implements INodeType {
 						Region.fromRegionId(credentials.region as string),
 					),
 				})
-				// const compartmentId = credentials.tenancyOcid as string;
+
 				const compartmentId = this.getNodeParameter('compartmentId', 0) as string || tenancyId;
 				const listModels = await client.listModels({ compartmentId: compartmentId });
 				const options = listModels.modelCollection.items
