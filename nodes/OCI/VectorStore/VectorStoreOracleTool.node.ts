@@ -1,4 +1,4 @@
- 
+
 import type { Embeddings } from '@langchain/core/embeddings';
 import {
 	type INodeTypeDescription,
@@ -13,7 +13,7 @@ import {
 	assertParamIsNumber,
 } from 'n8n-workflow';
 import oracledb from 'oracledb';
-import { DynamicTool } from 'langchain/tools';
+import { DynamicTool } from '@langchain/core/tools';
 import type { VectorStore } from '@langchain/core/vectorstores';
 import type { BaseDocumentCompressor } from '@langchain/core/retrievers/document_compressors';
 
@@ -126,7 +126,7 @@ async function handleRetrieveAsToolExecuteOperation<T extends VectorStore = Vect
 			},
 		},
 	];
-	
+
 }
 
 
@@ -321,31 +321,29 @@ export class VectorStoreOracleTool implements INodeType {
 			password: credentials.password as string,
 			connectString,
 		})
-		
-		
+
+
 		const items = this.getInputData(0);
-			const resultData = [];
+		const resultData = [];
 
-			for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
-				const tableName = this.getNodeParameter('tableName', itemIndex) as string;
-				const distanceStrategy = this.getNodeParameter('distanceStrategy', itemIndex) as DistanceStrategy;
-				const vectorStore = new OracleDbVectorStore({
-					client: dbClient,
-					tableName,
-					embeddings: embeddings,
-					distanceStrategy
-				})
-				const docs = await handleRetrieveAsToolExecuteOperation(
-					this,
-					vectorStore, // args,
-					embeddings,
-					itemIndex,
-				);
-				resultData.push(...docs);
-			}
+		for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
+			const tableName = this.getNodeParameter('tableName', itemIndex) as string;
+			const distanceStrategy = this.getNodeParameter('distanceStrategy', itemIndex) as DistanceStrategy;
+			const vectorStore = new OracleDbVectorStore({
+				client: dbClient,
+				tableName,
+				embeddings: embeddings,
+				distanceStrategy
+			})
+			const docs = await handleRetrieveAsToolExecuteOperation(
+				this,
+				vectorStore, // args,
+				embeddings,
+				itemIndex,
+			);
+			resultData.push(...docs);
+		}
 
-			return [resultData];
+		return [resultData];
 	}
 }
-
-

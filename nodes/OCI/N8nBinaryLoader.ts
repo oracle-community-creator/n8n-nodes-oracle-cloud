@@ -5,8 +5,8 @@ import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
 import type { Document } from '@langchain/core/documents';
 import type { TextSplitter } from '@langchain/textsplitters';
 import { createWriteStream } from 'fs';
-import { JSONLoader } from 'langchain/document_loaders/fs/json';
-import { TextLoader } from 'langchain/document_loaders/fs/text';
+import { JSONBlobLoader as JSONLoader } from './Loaders/SimpleLoaders';
+import { TextBlobLoader as TextLoader } from './Loaders/SimpleLoaders';
 import type {
 	IBinaryData,
 	IExecuteFunctions,
@@ -54,7 +54,7 @@ export class N8nBinaryLoader {
 		private optionsPrefix = '',
 		private binaryDataKey = '',
 		private textSplitter?: TextSplitter,
-	) {}
+	) { }
 
 	async processAll(items?: INodeExecutionData[]): Promise<Document[]> {
 		const docs: Document[] = [];
