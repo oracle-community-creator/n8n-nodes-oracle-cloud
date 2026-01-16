@@ -54,7 +54,8 @@
     "eslint": "9.32.0",
     "prettier": "3.6.2",
     "release-it": "^19.0.4",
-    "typescript": "5.9.2"
+    "typescript": "5.9.2",
+    "@types/node": "^22.10.1"
   },
   "peerDependencies": {
     "n8n-workflow": "*"
@@ -62,6 +63,7 @@
   "dependencies": {
     "@langchain/community": "^0.3.50",
     "@langchain/core": "^0.3.68",
+    "@langchain/textsplitters": "^0.0.3",
     "@types/oracledb": "^6.6.1",
     "@types/lodash": "^4.17.17",
     "oci-aispeech": "^2.122.0",

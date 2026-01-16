@@ -1,7 +1,7 @@
 import type { Document } from '@langchain/core/documents';
 import type { TextSplitter } from '@langchain/textsplitters';
-import { JSONLoader } from 'langchain/document_loaders/fs/json';
-import { TextLoader } from 'langchain/document_loaders/fs/text';
+import { JSONBlobLoader as JSONLoader } from './Loaders/SimpleLoaders';
+import { TextBlobLoader as TextLoader } from './Loaders/SimpleLoaders';
 import {
 	type IExecuteFunctions,
 	type INodeExecutionData,
@@ -35,7 +35,7 @@ export class N8nJsonLoader {
 		private context: IExecuteFunctions | ISupplyDataFunctions,
 		private optionsPrefix = '',
 		private textSplitter?: TextSplitter,
-	) {}
+	) { }
 
 	async processAll(items?: INodeExecutionData[]): Promise<Document[]> {
 		const docs: Document[] = [];
@@ -66,7 +66,7 @@ export class N8nJsonLoader {
 
 		if (!item) return [];
 
-		let documentLoader: JSONLoader | TextLoader | null = null;
+		let documentLoader: any | null = null;
 
 		if (mode === 'allInputData') {
 			const itemString = JSON.stringify(item.json);
@@ -97,7 +97,7 @@ export class N8nJsonLoader {
 			: await documentLoader.load();
 
 		if (metadata) {
-			docs.forEach((doc) => {
+			docs.forEach((doc: Document) => {
 				doc.metadata = {
 					...doc.metadata,
 					...metadata,

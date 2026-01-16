@@ -1,4 +1,4 @@
-import { DocumentInterface } from '@langchain/core/dist/documents/document';
+import type { DocumentInterface } from '@langchain/core/documents';
 import type { Callbacks } from '@langchain/core/callbacks/manager';
 import { VectorStore } from '@langchain/core/vectorstores';
 import { Embeddings } from '@langchain/core/embeddings';
@@ -314,6 +314,3 @@ export class OracleDbVectorStore extends VectorStore {
 	}
 
 }
-
-
-
