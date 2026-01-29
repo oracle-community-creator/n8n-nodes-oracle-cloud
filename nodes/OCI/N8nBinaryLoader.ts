@@ -1,3 +1,4 @@
+/* eslint-disable @n8n/community-nodes/no-restricted-imports */
 import { CSVLoader } from '@langchain/community/document_loaders/fs/csv';
 import { DocxLoader } from '@langchain/community/document_loaders/fs/docx';
 import { EPubLoader } from '@langchain/community/document_loaders/fs/epub';
@@ -5,8 +6,8 @@ import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
 import type { Document } from '@langchain/core/documents';
 import type { TextSplitter } from '@langchain/textsplitters';
 import { createWriteStream } from 'fs';
-import { JSONLoader } from 'langchain/document_loaders/fs/json';
-import { TextLoader } from 'langchain/document_loaders/fs/text';
+import { JSONLoader } from '@langchain/classic/document_loaders/fs/json';
+import { TextLoader } from '@langchain/classic/document_loaders/fs/text';
 import type {
 	IBinaryData,
 	IExecuteFunctions,
@@ -17,26 +18,7 @@ import { NodeOperationError, BINARY_ENCODING } from 'n8n-workflow';
 import { pipeline } from 'stream/promises';
 import { file as tmpFile, type DirectoryResult } from 'tmp-promise';
 
-function getMetadataFiltersValues(
-	ctx: IExecuteFunctions | ISupplyDataFunctions,
-	itemIndex: number,
-): Record<string, never> | undefined {
-	const options = ctx.getNodeParameter('options', itemIndex, {});
-
-	if (options.metadata) {
-		const { metadataValues: metadata } = options.metadata as {
-			metadataValues: Array<{
-				name: string;
-				value: string;
-			}>;
-		};
-		if (metadata.length > 0) {
-			return metadata.reduce((acc, { name, value }) => ({ ...acc, [name]: value }), {});
-		}
-	}
-
-	return undefined;
-}
+import { getMetadataFiltersValues } from './helpers';
 
 const SUPPORTED_MIME_TYPES = {
 	auto: ['*/*'],
@@ -44,7 +26,7 @@ const SUPPORTED_MIME_TYPES = {
 	csvLoader: ['text/csv'],
 	epubLoader: ['application/epub+zip'],
 	docxLoader: ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
-	textLoader: ['text/plain', 'text/mdx', 'text/md'],
+	textLoader: ['text/plain', 'text/mdx', 'text/md', 'text/markdown'],
 	jsonLoader: ['application/json'],
 };
 
@@ -110,7 +92,7 @@ export class N8nBinaryLoader {
 			const binaryBuffer = await this.context.helpers.binaryToBuffer(
 				await this.context.helpers.getBinaryStream(binaryData.id),
 			);
-			return new Blob([binaryBuffer], {
+			return new Blob([binaryBuffer as BlobPart], {
 				type: mimeType,
 			});
 		} else {

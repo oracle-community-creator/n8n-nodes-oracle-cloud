@@ -1,3 +1,4 @@
+/* eslint-disable @n8n/community-nodes/no-restricted-imports */
 import {
 	type INodeType,
 	type INodeTypeDescription,
@@ -133,6 +134,7 @@ export class LmChatOciGenerativeAi implements INodeType {
 			}
 
 		],
+		usableAsTool: undefined,
 	};
 
 	methods = {

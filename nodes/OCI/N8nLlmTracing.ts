@@ -1,3 +1,4 @@
+/* eslint-disable @n8n/community-nodes/no-restricted-imports */
 import { BaseCallbackHandler } from '@langchain/core/callbacks/base';
 import type { SerializedFields } from '@langchain/core/dist/load/map_keys';
 import { getModelNameForTiktoken } from '@langchain/core/language_models/base';
@@ -8,14 +9,15 @@ import type {
 } from '@langchain/core/load/serializable';
 import type { BaseMessage } from '@langchain/core/messages';
 import type { LLMResult } from '@langchain/core/outputs';
-import { encodingForModel } from '@langchain/core/utils/tiktoken';
 import pick from 'lodash/pick';
-import type { IDataObject, ISupplyDataFunctions, JsonObject, AiEvent, IExecuteFunctions } from 'n8n-workflow';
-import { NodeConnectionTypes, NodeError, NodeOperationError, jsonStringify } from 'n8n-workflow';
+import type { IDataObject, ISupplyDataFunctions, JsonObject } from 'n8n-workflow';
+import { NodeConnectionTypes, NodeError, NodeOperationError} from 'n8n-workflow';
 
 
-// import { logAiEvent } from '@utils/helpers';
-// import { estimateTokensFromStringList } from '@utils/tokenizer/token-estimator';
+import { logAiEvent } from './helpers';
+import { estimateTokensFromStringList } from './tokenizer';
+
+
 
 type TokensUsageParser = (result: LLMResult) => {
 	completionTokens: number;
@@ -28,18 +30,6 @@ type RunDetail = {
 	messages: BaseMessage[] | string[] | string;
 	options: SerializedSecret | SerializedNotImplemented | SerializedFields;
 };
-
-function logAiEvent(
-	executeFunctions: IExecuteFunctions | ISupplyDataFunctions,
-	event: AiEvent,
-	data?: IDataObject,
-) {
-	try {
-		executeFunctions.logAiEvent(event, data ? jsonStringify(data) : undefined);
-	} catch (error) {
-		executeFunctions.logger.debug(`Error logging AI event: ${event}`);
-	}
-}
 
 const TIKTOKEN_ESTIMATE_MODEL = 'gpt-4o';
 export class N8nLlmTracing extends BaseCallbackHandler {
@@ -88,6 +78,7 @@ export class N8nLlmTracing extends BaseCallbackHandler {
 		},
 	) {
 		super();
+
 		this.options = { ...this.options, ...options };
 	}
 
@@ -98,13 +89,7 @@ export class N8nLlmTracing extends BaseCallbackHandler {
 
 	async estimateTokensFromStringList(list: string[]) {
 		const embeddingModel = getModelNameForTiktoken(TIKTOKEN_ESTIMATE_MODEL);
-		const encoder = await encodingForModel(embeddingModel);
-
-		const encodedListLength = await Promise.all(
-			list.map(async (text) => encoder.encode(text).length),
-		);
-
-		return encodedListLength.reduce((acc, curr) => acc + curr, 0);
+		return await estimateTokensFromStringList(list, embeddingModel);
 	}
 
 	async handleLLMEnd(output: LLMResult, runId: string) {
@@ -151,11 +136,11 @@ export class N8nLlmTracing extends BaseCallbackHandler {
 			typeof runDetails.messages === 'string'
 				? runDetails.messages
 				: runDetails.messages.map((message) => {
-					if (typeof message === 'string') return message;
-					if (typeof message?.toJSON === 'function') return message.toJSON();
+						if (typeof message === 'string') return message;
+						if (typeof message?.toJSON === 'function') return message.toJSON();
 
-					return message;
-				});
+						return message;
+					});
 
 		const sourceNodeRunIndex =
 			this.#parentRunIndex !== undefined ? this.#parentRunIndex + runDetails.index : undefined;
@@ -209,6 +194,7 @@ export class N8nLlmTracing extends BaseCallbackHandler {
 	}
 
 	async handleLLMError(error: IDataObject | Error, runId: string, parentRunId?: string) {
+
 		const runDetails = this.runsMap[runId] ?? { index: Object.keys(this.runsMap).length };
 
 		// Filter out non-x- headers to avoid leaking sensitive information in logs

@@ -33,7 +33,6 @@ export const privateKeyParse = (privateKey: string): string => {
   const match = saneKey.match(/-----BEGIN ([A-Z\s]+)-----([\s\S]*?)-----END \1-----/);
 
   if (!match) {
-    console.warn("Key format not automatically detected. Attempting to format raw content.");
     const rawBody = saneKey.replace(/[\s\r\n]/g, '');
     return formatBody(rawBody, 'PRIVATE KEY');
   }

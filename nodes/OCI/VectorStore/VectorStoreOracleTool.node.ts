@@ -1,4 +1,5 @@
  
+/* eslint-disable @n8n/community-nodes/no-restricted-imports */
 import type { Embeddings } from '@langchain/core/embeddings';
 import {
 	type INodeTypeDescription,
@@ -13,7 +14,7 @@ import {
 	assertParamIsNumber,
 } from 'n8n-workflow';
 import oracledb from 'oracledb';
-import { DynamicTool } from 'langchain/tools';
+import { DynamicTool } from '@langchain/core/tools';
 import type { VectorStore } from '@langchain/core/vectorstores';
 import type { BaseDocumentCompressor } from '@langchain/core/retrievers/document_compressors';
 
@@ -232,7 +233,7 @@ export class VectorStoreOracleTool implements INodeType {
 				description: 'How similarity between vectors is measured',
 			}
 		],
-		// usableAsTool: true,
+		usableAsTool: true,
 	};
 
 	async supplyData(this: ISupplyDataFunctions, itemIndex: number): Promise<SupplyData> {

@@ -3,11 +3,9 @@
 		"strict": true,
 		"module": "commonjs",
 		"moduleResolution": "node",
-		"target": "es2019",
+		"target": "es2022",
 		"lib": [
-			"es2019",
-			"es2020",
-			"es2022.error"
+			"es2022", "dom", "dom.iterable"
 		],
 		"removeComments": true,
 		"useUnknownInCatchVariables": false,

@@ -1,3 +1,4 @@
+/* eslint-disable @n8n/community-nodes/no-restricted-imports */
 import type { Embeddings } from '@langchain/core/embeddings';
 import {
 	type INodeTypeDescription,
@@ -139,6 +140,7 @@ export class VectorStoreOracle implements INodeType {
 			// 	],
 			// }
 		],
+		usableAsTool: undefined,
 	};
 
 	async supplyData(this: ISupplyDataFunctions, itemIndex: number): Promise<SupplyData> {

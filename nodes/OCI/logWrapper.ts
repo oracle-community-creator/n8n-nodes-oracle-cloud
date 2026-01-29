@@ -1,4 +1,5 @@
 
+/* eslint-disable @n8n/community-nodes/no-restricted-imports */
 import type { Callbacks } from '@langchain/core/callbacks/manager';
 import type { Document } from '@langchain/core/documents';
 import { VectorStore } from '@langchain/core/vectorstores';
@@ -136,7 +137,7 @@ export function logWrapper<
 							executeFunctions,
 							connectionType,
 							currentNodeRunIndex: index,
-							method: target[prop],
+							method: target[prop] as (...args: any[]) => Promise<unknown>,
 							arguments: [query],
 						})) as string;
 

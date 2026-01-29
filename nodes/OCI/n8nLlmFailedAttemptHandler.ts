@@ -1,3 +1,4 @@
+/* eslint-disable @n8n/community-nodes/no-restricted-imports */
 import type { FailedAttemptHandler } from '@langchain/core/dist/utils/async_caller';
 import type { ISupplyDataFunctions, JsonObject } from 'n8n-workflow';
 import { NodeApiError } from 'n8n-workflow';

@@ -1,3 +1,4 @@
+/* eslint-disable @n8n/community-nodes/no-restricted-imports */
 import {
 	BaseChatModel,
 	type BaseChatModelParams,
@@ -7,10 +8,6 @@ import {
 	BaseMessage,
 	ToolMessage,
 	HumanMessage,
-	isAIMessage,
-	isToolMessage,
-	isHumanMessage,
-	isSystemMessage,
 	SystemMessage,
 } from '@langchain/core/messages';
 import { ToolCall } from '@langchain/core/messages/tool';
@@ -96,7 +93,7 @@ function jsonSchemaToCoherePrameters(jsonSchema: JsonSchema7Type): Record<string
 
 // TODO: hadle multimodal messages (img)
 function _toOciGenericApiMessage(message: BaseMessage) {
-	if (isHumanMessage(message)) {
+	if (HumanMessage.isInstance(message)) {
 		// TODO: handle humanMessage.content (MessageContentComplex | DataContentBlock)[]
 		const humanMessage = message as HumanMessage;
 		return {
@@ -108,7 +105,7 @@ function _toOciGenericApiMessage(message: BaseMessage) {
 				} as model.TextContent,
 			],
 		} as model.UserMessage;
-	} else if (isAIMessage(message)) {
+	} else if (AIMessage.isInstance(message)) {
 		const aiMessage = message as AIMessage;
 		return {
 			role: 'ASSISTANT',
@@ -127,7 +124,7 @@ function _toOciGenericApiMessage(message: BaseMessage) {
 				} as model.FunctionCall
 			})
 		} as model.AssistantMessage;
-	} else if (isSystemMessage(message)) {
+	} else if (SystemMessage.isInstance(message)) {
 		// TODO: handle humanMessage.content (MessageContentComplex | DataContentBlock)[]
 		const systemMessage = message as SystemMessage;
 		return {
@@ -139,7 +136,7 @@ function _toOciGenericApiMessage(message: BaseMessage) {
 				} as model.TextContent,
 			],
 		} as model.SystemMessage;
-	} else if (isToolMessage(message)) {
+	} else if (ToolMessage.isInstance(message)) {
 		// TODO: handle humanMessage.content (MessageContentComplex | DataContentBlock)[]
 		const toolMessage = message as ToolMessage;
 		return {
@@ -158,14 +155,14 @@ function _toOciGenericApiMessage(message: BaseMessage) {
 }
 
 function _toOciCohereMessage(message: BaseMessage) {
-	if (isHumanMessage(message)) {
+	if (HumanMessage.isInstance(message)) {
 		// TODO: handle humanMessage.content (MessageContentComplex | DataContentBlock)[]
 		const humanMessage = message as HumanMessage;
 		return {
 			role: 'USER',
 			message: humanMessage.content as string
 		} as model.CohereUserMessage;
-	} else if (isAIMessage(message)) {
+	} else if (AIMessage.isInstance(message)) {
 		const aiMessage = message as AIMessage;
 		if (aiMessage.tool_calls && aiMessage.tool_calls?.length > 0) {
 			if (aiMessage.content) {
@@ -184,7 +181,7 @@ function _toOciCohereMessage(message: BaseMessage) {
 				} as model.CohereToolCall
 			})
 		} as model.CohereChatBotMessage;
-	} else if (isSystemMessage(message)) {
+	} else if (SystemMessage.isInstance(message)) {
 		// TODO: handle COhere System Message in preamble override
 		// TODO: handle humanMessage.content (MessageContentComplex | DataContentBlock)[]
 		const systemMessage = message as SystemMessage;
@@ -192,7 +189,7 @@ function _toOciCohereMessage(message: BaseMessage) {
 			role: 'SYSTEM',
 			message: systemMessage.content as string,
 		} as model.CohereSystemMessage;
-	} else if (isToolMessage(message)) {
+	} else if (ToolMessage.isInstance(message)) {
 		// TODO: handle humanMessage.content (MessageContentComplex | DataContentBlock)[]
 		const toolMessage = message as ToolMessage;
 		return {
@@ -230,7 +227,7 @@ export interface OciGenerativeAiInput extends BaseChatModelParams {
 	tools?: (model.ToolDefinition | model.CohereTool)[];
 }
 
-export class ChatOciGenerativeAi extends BaseChatModel {
+export class ChatOciGenerativeAi extends BaseChatModel<OciGenerativeAiInput> {
 	model: string;
 	compartmentId: string;
 	auth: {
@@ -285,10 +282,14 @@ export class ChatOciGenerativeAi extends BaseChatModel {
 			});
 		} else {
 			genericTools = tools.map((tool) => {
+				const paramsSchema = toJsonSchema(tool.schema)
+				const cleanSchema = Object.fromEntries(
+					Object.entries(paramsSchema).filter(([key]) => key !== '$schema')
+				);
 				return {
 					name: tool.name,
 					description: tool.description,
-					parameters: toJsonSchema(tool.schema),
+					parameters: cleanSchema,
 					type: 'FUNCTION'
 				} as model.FunctionDefinition
 			})
@@ -305,7 +306,13 @@ export class ChatOciGenerativeAi extends BaseChatModel {
 			// maxTokens: this.maxTokens,
 			compartmentId: this.compartmentId,
 			auth: this.auth,
-			tools: ociTools
+			tools: ociTools,
+
+			// Preserve ALL fields from parent class
+			callbacks: this.callbacks,
+			verbose: this.verbose,
+			tags: this.tags,
+			metadata: this.metadata
 		};
 		return new (this.constructor as new (fields: OciGenerativeAiInput) => this)(fields);
 	}
@@ -410,6 +417,7 @@ export class ChatOciGenerativeAi extends BaseChatModel {
 				tools: this.tools,
 				toolResults
 			} as models.CohereChatRequest;
+			console.log(chatRequest)
 		} else {
 			// TODO: adjust temperature and topK
 			const ociMessages = messages.map(_toOciGenericApiMessage).flat();
@@ -441,6 +449,7 @@ export class ChatOciGenerativeAi extends BaseChatModel {
 
 		if (response.chatResult.chatResponse.apiFormat === 'COHERE') {
 			const cohereResponse = response.chatResult.chatResponse as models.CohereChatResponse;
+			console.log(cohereResponse)
 
 			toolCalls = cohereResponse.toolCalls?.map((toolCall) => {
 				return {
@@ -461,7 +470,7 @@ export class ChatOciGenerativeAi extends BaseChatModel {
 				return {
 					name: toolCall.name,
 					args,
-					id: toolCall.id,
+					id: toolCall.id || toolCall.name,
 					type: "tool_call"
 				} as ToolCall
 			})
@@ -470,6 +479,11 @@ export class ChatOciGenerativeAi extends BaseChatModel {
 			// toolCalls = choice.message.toolCalls as ToolCall[];
 		}
 
+		const usage = response.chatResult.chatResponse?.usage
+		if (usage && usage?.totalTokens && usage.promptTokens) {
+			usage.completionTokens = usage?.totalTokens - usage.promptTokens
+		}
+			
 		return {
 			generations: [
 				{
@@ -480,6 +494,15 @@ export class ChatOciGenerativeAi extends BaseChatModel {
 					}),
 				},
 			],
-		};
+			llmOutput: {
+				tokenUsage: {
+					completionTokens: usage?.completionTokens,
+					promptTokens: usage?.promptTokens,
+					totalTokens: usage?.totalTokens
+				},
+				
+				model: this.model
+			}
+		} as ChatResult;
 	}
 }

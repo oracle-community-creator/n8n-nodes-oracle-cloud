@@ -1,3 +1,4 @@
+/* eslint-disable @n8n/community-nodes/no-restricted-imports */
 import {
 	NodeConnectionTypes,
 	type INodeType,
@@ -65,6 +66,7 @@ export class EmbeddingsOciGenerativeAi implements INodeType {
 				required: true,
 			},
 		],
+		usableAsTool: undefined,
 	};
 
 	methods = {

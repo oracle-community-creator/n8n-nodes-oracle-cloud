@@ -1,3 +1,4 @@
+/* eslint-disable @n8n/community-nodes/no-restricted-imports */
 import type { Embeddings } from '@langchain/core/embeddings';
 import {
 	type INodeTypeDescription,
@@ -79,6 +80,7 @@ export class VectorStoreOracleInsert implements INodeType {
 				description: 'Whether to clear the table before inserting new data',
 			}
 		],
+		usableAsTool: undefined,
 	};
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {

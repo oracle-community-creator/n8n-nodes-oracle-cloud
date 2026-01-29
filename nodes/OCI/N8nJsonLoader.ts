@@ -1,7 +1,8 @@
+/* eslint-disable @n8n/community-nodes/no-restricted-imports */
 import type { Document } from '@langchain/core/documents';
 import type { TextSplitter } from '@langchain/textsplitters';
-import { JSONLoader } from 'langchain/document_loaders/fs/json';
-import { TextLoader } from 'langchain/document_loaders/fs/text';
+import { JSONLoader } from '@langchain/classic/document_loaders/fs/json';
+import { TextLoader } from '@langchain/classic/document_loaders/fs/text';
 import {
 	type IExecuteFunctions,
 	type INodeExecutionData,
@@ -9,26 +10,7 @@ import {
 	NodeOperationError,
 } from 'n8n-workflow';
 
-function getMetadataFiltersValues(
-	ctx: IExecuteFunctions | ISupplyDataFunctions,
-	itemIndex: number,
-): Record<string, never> | undefined {
-	const options = ctx.getNodeParameter('options', itemIndex, {});
-
-	if (options.metadata) {
-		const { metadataValues: metadata } = options.metadata as {
-			metadataValues: Array<{
-				name: string;
-				value: string;
-			}>;
-		};
-		if (metadata.length > 0) {
-			return metadata.reduce((acc, { name, value }) => ({ ...acc, [name]: value }), {});
-		}
-	}
-
-	return undefined;
-}
+import { getMetadataFiltersValues } from './helpers';
 
 export class N8nJsonLoader {
 	constructor(

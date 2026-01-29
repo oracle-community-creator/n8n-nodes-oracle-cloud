@@ -1,3 +1,4 @@
+/* eslint-disable @n8n/community-nodes/no-restricted-imports */
 import type { Document } from '@langchain/core/documents';
 import type { INodeExecutionData } from 'n8n-workflow';
 

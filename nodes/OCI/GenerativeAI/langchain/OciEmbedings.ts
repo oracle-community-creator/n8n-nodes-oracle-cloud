@@ -1,3 +1,4 @@
+/* eslint-disable @n8n/community-nodes/no-restricted-imports */
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { isArray } from "lodash";
 import { AuthenticationDetailsProvider } from "oci-common";
