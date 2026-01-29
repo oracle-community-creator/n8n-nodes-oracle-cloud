@@ -282,10 +282,14 @@ export class ChatOciGenerativeAi extends BaseChatModel<OciGenerativeAiInput> {
 			});
 		} else {
 			genericTools = tools.map((tool) => {
+				const paramsSchema = toJsonSchema(tool.schema)
+				const cleanSchema = Object.fromEntries(
+					Object.entries(paramsSchema).filter(([key]) => key !== '$schema')
+				);
 				return {
 					name: tool.name,
 					description: tool.description,
-					parameters: toJsonSchema(tool.schema),
+					parameters: cleanSchema,
 					type: 'FUNCTION'
 				} as model.FunctionDefinition
 			})
@@ -413,6 +417,7 @@ export class ChatOciGenerativeAi extends BaseChatModel<OciGenerativeAiInput> {
 				tools: this.tools,
 				toolResults
 			} as models.CohereChatRequest;
+			console.log(chatRequest)
 		} else {
 			// TODO: adjust temperature and topK
 			const ociMessages = messages.map(_toOciGenericApiMessage).flat();
@@ -444,6 +449,7 @@ export class ChatOciGenerativeAi extends BaseChatModel<OciGenerativeAiInput> {
 
 		if (response.chatResult.chatResponse.apiFormat === 'COHERE') {
 			const cohereResponse = response.chatResult.chatResponse as models.CohereChatResponse;
+			console.log(cohereResponse)
 
 			toolCalls = cohereResponse.toolCalls?.map((toolCall) => {
 				return {
@@ -464,7 +470,7 @@ export class ChatOciGenerativeAi extends BaseChatModel<OciGenerativeAiInput> {
 				return {
 					name: toolCall.name,
 					args,
-					id: toolCall.id,
+					id: toolCall.id || toolCall.name,
 					type: "tool_call"
 				} as ToolCall
 			})
@@ -474,19 +480,10 @@ export class ChatOciGenerativeAi extends BaseChatModel<OciGenerativeAiInput> {
 		}
 
 		const usage = response.chatResult.chatResponse?.usage
-		console.log(usage)
-		console.log(
-			{
-				tokenUsage: {
-					completionTokens: usage?.completionTokens,
-					promptTokens: usage?.promptTokens,
-					totalTokens: usage?.totalTokens
-				},
-				
-				model: this.model
-			}
-		)
-
+		if (usage && usage?.totalTokens && usage.promptTokens) {
+			usage.completionTokens = usage?.totalTokens - usage.promptTokens
+		}
+			
 		return {
 			generations: [
 				{
