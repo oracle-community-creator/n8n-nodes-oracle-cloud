@@ -8,13 +8,15 @@ import {
 	type INodeType,
 	IExecuteFunctions,
 	NodeConnectionTypes,
+	NodeOperationError,
 	INodePropertyOptions,
 	INodeExecutionData,
 	assertParamIsBoolean,
 	assertParamIsNumber,
 } from 'n8n-workflow';
 import oracledb from 'oracledb';
-import { DynamicTool } from '@langchain/core/tools';
+import { DynamicStructuredTool } from '@langchain/core/tools';
+import { z } from 'zod';
 import type { VectorStore } from '@langchain/core/vectorstores';
 import type { BaseDocumentCompressor } from '@langchain/core/retrievers/document_compressors';
 
@@ -48,7 +50,7 @@ function getMetadataFiltersValues(
 	return undefined;
 }
 
-async function handleRetrieveAsToolExecuteOperation<T extends VectorStore = VectorStore>(
+async function handleRetrieveAsToolExecuteOperation(
 	context: IExecuteFunctions,
 	// args: VectorStoreNodeConstructorArgs<T>,
 	vectorStore: VectorStore,
@@ -60,10 +62,17 @@ async function handleRetrieveAsToolExecuteOperation<T extends VectorStore = Vect
 	// Get the search parameters - query from input data, others from node parameters
 	const inputData = context.getInputData();
 	const item = inputData[itemIndex];
-	const query = typeof item.json.input === 'string' ? item.json.input : undefined;
+	const query =
+		typeof item.json.query === 'string'
+			? item.json.query
+			: typeof item.json.input === 'string'
+				? item.json.input
+				: typeof item.json.chatInput === 'string'
+					? item.json.chatInput
+					: undefined;
 
-	if (!query || typeof query !== 'string') {
-		throw new Error('Input data must contain a "input" field with the search query');
+	if (!query) {
+		throw new NodeOperationError(context.getNode(), 'Input data must contain a "query", "input", or "chatInput" field with the search query');
 	}
 
 	const topK = context.getNodeParameter('topK', itemIndex, 4);
@@ -263,11 +272,12 @@ export class VectorStoreOracleTool implements INodeType {
 			0,
 		)) as Embeddings;
 
-		// Create a Dynamic Tool that wraps vector store search functionality
-		const vectorStoreTool = new DynamicTool({
+		// Create a Structured Tool that wraps vector store search functionality
+		const vectorStoreTool = new DynamicStructuredTool({
 			name: toolName,
 			description: toolDescription,
-			func: async (input) => {
+			schema: z.object({ query: z.string().describe('The search query to look up in the vector store') }),
+			func: async ({ query: input }) => {
 				const vectorStore = new OracleDbVectorStore({
 					client: dbClient,
 					tableName,
